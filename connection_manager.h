@@ -5,9 +5,12 @@ class TcpServer;
 
 class ConnectionManager {
  public:
-  TcpServer* tcp_srv;
+  TcpServer* srv;
 
   ConnectionManager(TcpServer* srv);
+  ~ConnectionManager();
+
+  void startThread();
 
  private:
-}
+};

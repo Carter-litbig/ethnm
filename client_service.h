@@ -6,10 +6,13 @@ class TcpServer;
 
 class ClientService {
  public:
-  TcpServer* tcp_srv;
+  TcpServer* srv;
 
   ClientService(TcpServer* srv);
+  ~ClientService();
+
+  void startThread();
 
  private:
   
-}
+};

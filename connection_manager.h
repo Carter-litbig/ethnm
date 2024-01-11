@@ -1,6 +1,8 @@
 #pragma once
 // connmgr
 
+#include <pthread.h>
+
 class TcpServer;
 
 class ConnectionManager {
@@ -13,4 +15,6 @@ class ConnectionManager {
   void startThread();
 
  private:
+  int fd; /* socket file descriptor */
+  pthread_t* thread;
 };

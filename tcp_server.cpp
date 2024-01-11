@@ -23,7 +23,7 @@ void TcpServer::start() {
   /* Init client db */
   this->cli_db_->init();
 
-  printf("tcp server start [%s, %d]", network_convert_ip_n_to_p(this->ip, 0),
+  printf("tcp server start [%s, %d]\n", network_convert_ip_n_to_p(this->ip, 0),
          this->port);
 }
 

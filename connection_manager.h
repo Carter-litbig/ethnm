@@ -13,6 +13,7 @@ class ConnectionManager {
   ~ConnectionManager();
 
   void startThread();
+  void startThreadInternal();
 
  private:
   int fd; /* socket file descriptor */

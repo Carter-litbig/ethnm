@@ -1,6 +1,6 @@
 CC=g++
 CFLAGS=-g
-TARGET:tcpsrvapp.exe
+TARGET:tcpsrv.exe
 LIBS=-lpthread
 OBJS=client_db.o \
 	 		client_service.o \
@@ -8,8 +8,8 @@ OBJS=client_db.o \
 			tcp_server.o \
 			network_utils.o
 
-tcpsrvapp.exe:tcpsrvapp.o ${OBJS}
-	${CC} ${CFLAGS} ${OBJS} tcpsrvapp.o -o tcpsrvapp.exe ${LIBS}
+tcpsrv.exe:tcpsrv.o ${OBJS}
+	${CC} ${CFLAGS} ${OBJS} tcpsrv.o -o tcpsrv.exe ${LIBS}
 	
 client_db.o:client_db.cpp
 	${CC} ${CFLAGS} -c client_db.cpp -o client_db.o

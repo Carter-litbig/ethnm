@@ -8,7 +8,7 @@ class TcpServer;
 
 class ClientDB {
  public:
-  TcpServer* tcp_srv;
+  TcpServer* srv;
 
   ClientDB(TcpServer* srv);
   ~ClientDB();

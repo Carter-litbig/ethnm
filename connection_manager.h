@@ -8,6 +8,7 @@ class ConnectionManager {
   TcpServer* tcp_srv;
 
   ConnectionManager(TcpServer* srv);
+  ~ConnectionManager();
 
  private:
-}
+};

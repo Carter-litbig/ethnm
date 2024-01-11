@@ -9,7 +9,8 @@ class ClientService {
   TcpServer* tcp_srv;
 
   ClientService(TcpServer* srv);
+  ~ClientService();
 
  private:
   
-}
+};

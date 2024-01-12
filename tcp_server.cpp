@@ -21,10 +21,15 @@ void TcpServer::start() {
   this->cli_svc_->startThread();
 
   /* Init client db */
-  this->cli_db_->init();
+  this->cli_db_->create();
 
-  printf("tcp server start [%s, %d]\nok\n", network_convert_ip_n_to_p(this->ip, 0),
-         this->port);
+  printf("tcp server start [%s, %d]\nok\n",
+         network_convert_ip_n_to_p(this->ip, 0), this->port);
 }
 
 void TcpServer::stop() {}
+
+void TcpServer::updateClient(TcpClient* client) {
+  this->cli_db_->update(client);
+  this->cli_svc_->listen(client);
+}

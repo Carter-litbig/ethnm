@@ -7,6 +7,8 @@
 
 #include "network_utils.h"
 
+#include "tcp_client.h"
+
 ConnectionManager::ConnectionManager(TcpServer* srv) {
   this->srv = srv;
 
@@ -61,7 +63,8 @@ void ConnectionManager::startThreadInternal() {
   socklen_t c_addr_len = sizeof(c_addr);
   int fd;
 
-  /* 서버 소켓은 한개만 열어두고 여러 개의 클라이언트 수락 가능. 서버 옵션 참조 */
+  /* 서버 소켓은 한개만 열어두고 여러 개의 클라이언트 수락 가능. 서버 옵션 참조
+   */
   while (true) {
     /* Invoke accept() to acept new connections */
     fd = accept(this->fd, (struct sockaddr*)&c_addr, &c_addr_len);
@@ -70,6 +73,12 @@ void ConnectionManager::startThreadInternal() {
       printf("error in accepting new connections\n");
       continue;
     }
+
+    TcpClient* cli =
+        new TcpClient(this->srv, c_addr.sin_addr.s_addr, c_addr.sin_port, fd);
+    
+    /* Update Client DB */
+    this->srv->updateClient(cli);
 
     printf("connection accepted from client[%s, %d]\n",
            network_convert_ip_n_to_p(htonl(c_addr.sin_addr.s_addr), 0),

@@ -1,7 +1,7 @@
 #pragma once
 // clisvc
 
-class Client;
+class TcpClient;
 class TcpServer;
 
 class ClientService {
@@ -12,6 +12,7 @@ class ClientService {
   ~ClientService();
 
   void startThread();
+  void listen(TcpClient* client);
 
  private:
   

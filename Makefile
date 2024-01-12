@@ -6,7 +6,8 @@ OBJS=client_db.o \
 	 		client_service.o \
 			connection_manager.o  \
 			tcp_server.o \
-			network_utils.o
+			network_utils.o \
+			tcp_client.o
 
 tcpsrv.exe:tcpsrv.o ${OBJS}
 	${CC} ${CFLAGS} ${OBJS} tcpsrv.o -o tcpsrv.exe ${LIBS}
@@ -25,6 +26,9 @@ tcp_server.o:tcp_server.cpp
 
 network_utils.o:network_utils.cpp
 	${CC} ${CFLAGS} -c network_utils.cpp -o network_utils.o
+
+tcp_client.o:tcp_client.cpp
+	${CC} ${CFLAGS} -c tcp_client.cpp -o tcp_client.o
 
 clean:
 	rm -f *.o

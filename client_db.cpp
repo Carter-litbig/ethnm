@@ -5,4 +5,8 @@ ClientDB::ClientDB(TcpServer* srv) { this->srv = srv; }
 
 ClientDB::~ClientDB() {}
 
-void ClientDB::init() {}
+void ClientDB::create() {}
+
+void ClientDB::update(TcpClient* client) {
+  this->clients_.push_back(client);
+}

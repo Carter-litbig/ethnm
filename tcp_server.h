@@ -7,6 +7,8 @@
 #include "client_db.h"
 #include "client_service.h"
 
+#include "tcp_client.h"
+
 class TcpServer {
  public:
   uint32_t ip;
@@ -18,6 +20,8 @@ class TcpServer {
 
   void start();
   void stop();
+
+  void updateClient(TcpClient* client);
 
  private:
   ConnectionManager* conn_mgr_;

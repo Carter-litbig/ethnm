@@ -3,7 +3,7 @@
 
 #include <list>
 
-class Client;
+class TcpClient;
 class TcpServer;
 
 class ClientDB {
@@ -13,8 +13,9 @@ class ClientDB {
   ClientDB(TcpServer* srv);
   ~ClientDB();
 
-  void init();
+  void create();
+  void update(TcpClient* client);
 
  private:
-  std::list<Client*> client_;
+  std::list<TcpClient*> clients_;
 };

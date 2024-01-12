@@ -33,3 +33,11 @@ void TcpServer::updateClient(TcpClient* client) {
   this->cli_db_->update(client);
   this->cli_svc_->listen(client);
 }
+
+void TcpServer::registerListener(ClientConnected connected,
+                                 ClientDisconnected disconnected,
+                                 ClientReceived received) {
+  this->connected = connected;
+  this->disconnected = disconnected;
+  this->received = received;
+}

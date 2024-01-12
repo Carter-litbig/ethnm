@@ -9,6 +9,20 @@
 
 #include "tcp_client.h"
 
+/* Notify for application */
+#if 0
+typedef void (*ClientConnected)(const TcpServer*, const TcpClient);
+typedef void (*ClientDisconnected)(const TcpServer*, const TcpClient);
+// const TcpServer*, const TcpClient, unsigned char* msg, uint16_t len
+typedef void (*ClientReceived)(const TcpServer*, const TcpClient,
+                               unsigned char*, uint16_t);
+#endif
+
+using ClientConnected = void (*)(const TcpServer*, const TcpClient*);
+using ClientDisconnected = void (*)(const TcpServer*, const TcpClient*);
+using ClientReceived = void (*)(const TcpServer*, const TcpClient*,
+                                unsigned char*, uint16_t);
+
 class TcpServer {
  public:
   uint32_t ip;
@@ -22,6 +36,13 @@ class TcpServer {
   void stop();
 
   void updateClient(TcpClient* client);
+
+  ClientConnected connected;
+  ClientDisconnected disconnected;
+  ClientReceived received;
+
+  /* Register listeners for application */
+  void registerListener(ClientConnected, ClientDisconnected, ClientReceived);
 
  private:
   ConnectionManager* conn_mgr_;

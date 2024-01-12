@@ -76,11 +76,15 @@ void ConnectionManager::startThreadInternal() {
 
     TcpClient* cli =
         new TcpClient(this->srv, c_addr.sin_addr.s_addr, c_addr.sin_port, fd);
-    
+
+    if (this->srv->connected != NULL) {
+      this->srv->connected(this->srv, cli);
+    }
+
     /* Update Client DB */
     this->srv->updateClient(cli);
 
-    printf("connection accepted from client[%s, %d]\n",
+    printf("connection accepted from client [%s, %d]\n",
            network_convert_ip_n_to_p(htonl(c_addr.sin_addr.s_addr), 0),
            htons(c_addr.sin_port));
 

@@ -44,6 +44,8 @@ class TcpServer {
   /* Register listeners for application */
   void registerListener(ClientConnected, ClientDisconnected, ClientReceived);
 
+  void display();
+
  private:
   ConnectionManager* conn_mgr_;
   ClientDB* cli_db_;

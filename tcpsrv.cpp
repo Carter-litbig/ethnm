@@ -32,5 +32,7 @@ int main(int argc, char** argv) {
 
   srv1->start();
   scanf("\n");
+
+  srv1->display();
   return 0;
 }

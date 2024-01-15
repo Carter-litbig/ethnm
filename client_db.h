@@ -15,6 +15,7 @@ class ClientDB {
 
   void create();
   void update(TcpClient* client);
+  void display();
 
  private:
   std::list<TcpClient*> clients_;

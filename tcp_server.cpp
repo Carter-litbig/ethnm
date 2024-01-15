@@ -41,3 +41,11 @@ void TcpServer::registerListener(ClientConnected connected,
   this->disconnected = disconnected;
   this->received = received;
 }
+
+void TcpServer::display() {
+  printf("server name: %s\n", this->name.c_str());
+  printf("listening on: [%s, %d]\n", network_convert_ip_n_to_p(this->ip, 0),
+         this->port);
+
+  this->cli_db_->display();
+}

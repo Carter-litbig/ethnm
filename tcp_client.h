@@ -13,4 +13,6 @@ class TcpClient {
   TcpServer* srv;
 
   TcpClient(TcpServer* srv, uint32_t ip, uint16_t port, int fd);
+
+  void display();
 };

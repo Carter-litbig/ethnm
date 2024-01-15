@@ -16,6 +16,9 @@ class ClientService {
   void startThreadInternal();
   void listen(TcpClient* client);
 
+  int getMaxFd();
+  void copyClientFd(fd_set*);
+
  private:
   int max_fd;
   fd_set active_fd_set;

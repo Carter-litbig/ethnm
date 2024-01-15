@@ -11,24 +11,55 @@
 #define CLI_SVC_RCV_BUF_SIZE 1024
 unsigned char cli_rcv_buf[CLI_SVC_RCV_BUF_SIZE];
 
-ClientService::ClientService(TcpServer* srv) {
+ClientService::ClientService(TcpServer *srv) {
   this->srv = srv;
   this->max_fd = 0;
   FD_ZERO(&this->active_fd_set);
   FD_ZERO(&this->backup_fd_set);
-  thread = (pthread_t*)calloc(1, sizeof(pthread_t));
+  thread = (pthread_t *)calloc(1, sizeof(pthread_t));
 }
 
 ClientService::~ClientService() {}
+
+int ClientService::getMaxFd() {
+  int max_fd_lcl = 0;
+
+  TcpClient *cli;
+  std::list<TcpClient *>::iterator it;
+
+  for (it = this->clients_.begin(); it != this->clients_.end(); ++it) {
+    cli = *it;
+    if (cli->fd > max_fd_lcl) {
+      max_fd_lcl = cli->fd;
+    }
+  }
+  return max_fd_lcl;
+}
+
+void ClientService::copyClientFd(fd_set *fdset) {
+  TcpClient *cli;
+  std::list<TcpClient *>::iterator it;
+
+  for (it = this->clients_.begin(); it != this->clients_.end();
+       ++it) {
+    cli = *it;
+    FD_SET(cli->fd, fdset);
+  }
+}
 
 void ClientService::startThreadInternal() {
   /* Invoke select system call on all clients present in client db */
   int data_len;
   TcpClient *cli, *next_cli;
   struct sockaddr_in addr;
-  std::list<TcpClient*>::iterator it;
+  std::list<TcpClient *>::iterator it;
 
   socklen_t addr_len = sizeof(addr);
+
+  /* Copy all clients fd */
+  this->max_fd = this->getMaxFd();
+  FD_ZERO(&this->backup_fd_set);
+  this->copyClientFd(&this->backup_fd_set);
 
   while (true) {
     memcpy(&this->active_fd_set, &this->backup_fd_set, sizeof(fd_set));
@@ -40,7 +71,7 @@ void ClientService::startThreadInternal() {
 
       if (FD_ISSET(cli->fd, &this->active_fd_set)) {
         data_len = recvfrom(cli->fd, cli_rcv_buf, CLI_SVC_RCV_BUF_SIZE, 0,
-                            (struct sockaddr*)&addr, &addr_len);
+                            (struct sockaddr *)&addr, &addr_len);
       }
 
       if (this->srv->received) {
@@ -50,8 +81,8 @@ void ClientService::startThreadInternal() {
   }
 }
 
-void* client_service_thread(void* arg) {
-  ClientService* cs = (ClientService*)arg;
+void *client_service_thread(void *arg) {
+  ClientService *cs = (ClientService *)arg;
 
   cs->startThreadInternal();
   return NULL;
@@ -60,8 +91,8 @@ void* client_service_thread(void* arg) {
 void ClientService::startThread() {
   pthread_attr_t attr;
   pthread_attr_init(&attr);
-  pthread_create(this->thread, &attr, client_service_thread, (void*)this);
+  pthread_create(this->thread, &attr, client_service_thread, (void *)this);
   printf("service started: client_service_thread\n");
 }
 
-void ClientService::listen(TcpClient* client) {}
+void ClientService::listen(TcpClient *client) {}

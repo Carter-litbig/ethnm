@@ -1,5 +1,6 @@
 #pragma once
 // clisvc
+#include <list>
 
 class TcpClient;
 class TcpServer;
@@ -12,8 +13,13 @@ class ClientService {
   ~ClientService();
 
   void startThread();
+  void startThreadInternal();
   void listen(TcpClient* client);
 
  private:
-  
+  int max_fd;
+  fd_set active_fd_set;
+  fd_set backup_fd_set;
+  pthread_t* thread;
+  std::list<TcpClient*> clients_;
 };

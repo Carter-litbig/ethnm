@@ -92,7 +92,7 @@ void ConnectionManager::startThreadInternal() {
   }
 }
 
-static void* connection_manager_listen(void* arg) {
+static void* connection_manager_thread(void* arg) {
   ConnectionManager* cm = (ConnectionManager*)arg;
 
   cm->startThreadInternal();
@@ -100,11 +100,11 @@ static void* connection_manager_listen(void* arg) {
 
 void ConnectionManager::startThread() {
   /* Start a thread */
-  if (pthread_create(this->thread, NULL, connection_manager_listen,
+  if (pthread_create(this->thread, NULL, connection_manager_thread,
                      (void*)this)) {
     printf("%s() thread creation failed, error=%d\n", __FUNCTION__, errno);
     exit(0);
   }
 
-  printf("connmgr thread started: \n");
+  printf("service started: connection_manager_thread:\n");
 }

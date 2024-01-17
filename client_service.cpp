@@ -40,8 +40,7 @@ void ClientService::copyClientFd(fd_set *fdset) {
   TcpClient *cli;
   std::list<TcpClient *>::iterator it;
 
-  for (it = this->clients_.begin(); it != this->clients_.end();
-       ++it) {
+  for (it = this->clients_.begin(); it != this->clients_.end(); ++it) {
     cli = *it;
     FD_SET(cli->fd, fdset);
   }
@@ -84,6 +83,9 @@ void ClientService::startThreadInternal() {
 void *client_service_thread(void *arg) {
   ClientService *cs = (ClientService *)arg;
 
+  pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+  pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
+
   cs->startThreadInternal();
   return NULL;
 }
@@ -93,6 +95,13 @@ void ClientService::startThread() {
   pthread_attr_init(&attr);
   pthread_create(this->thread, &attr, client_service_thread, (void *)this);
   printf("service started: client_service_thread\n");
+}
+
+void ClientService::stopThread() {
+  pthread_cancel(*this->thread);
+  pthread_join(*this->thread, NULL);
+  free(this->thread);
+  this->thread = NULL;
 }
 
 void ClientService::listen(TcpClient *client) {}

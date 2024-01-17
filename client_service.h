@@ -1,5 +1,6 @@
 #pragma once
 // clisvc
+
 #include <list>
 
 class TcpClient;
@@ -14,6 +15,7 @@ class ClientService {
 
   void startThread();
   void startThreadInternal();
+  void stopThread();
   void listen(TcpClient* client);
 
   int getMaxFd();

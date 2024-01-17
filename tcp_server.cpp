@@ -29,7 +29,7 @@ void TcpServer::start() {
 
 void TcpServer::stop() {}
 
-void TcpServer::updateClient(TcpClient* client) {
+void TcpServer::addClient(TcpClient* client) {
   this->cli_db_->update(client);
   this->cli_svc_->listen(client);
 }

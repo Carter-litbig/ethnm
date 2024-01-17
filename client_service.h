@@ -20,6 +20,7 @@ class ClientService {
 
   int getMaxFd();
   void copyClientFd(fd_set*);
+  void addClient(TcpClient* client);
 
  private:
   int max_fd;

@@ -3,13 +3,15 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <memory.h>
+#include <errno.h>
+#include <unistd.h> // for sleep
 
 #include "client_service.h"
 #include "tcp_server.h"
 #include "tcp_client.h"
 
 #define CLI_SVC_RCV_BUF_SIZE 1024
-unsigned char cli_rcv_buf[CLI_SVC_RCV_BUF_SIZE];
+unsigned char rcv_buf[CLI_SVC_RCV_BUF_SIZE];
 
 ClientService::ClientService(TcpServer *srv) {
   this->srv = srv;
@@ -69,12 +71,18 @@ void ClientService::startThreadInternal() {
       next_cli = *(++it);
 
       if (FD_ISSET(cli->fd, &this->active_fd_set)) {
-        data_len = recvfrom(cli->fd, cli_rcv_buf, CLI_SVC_RCV_BUF_SIZE, 0,
+        data_len = recvfrom(cli->fd, rcv_buf, CLI_SVC_RCV_BUF_SIZE, 0,
                             (struct sockaddr *)&addr, &addr_len);
+        printf("recvfrom: \n");
+      }
+
+      if (data_len == 0) {
+        printf("recvfrom: data_len 0, error no = %d\n", errno);
+        sleep(1);
       }
 
       if (this->srv->received) {
-        this->srv->received(this->srv, cli, cli_rcv_buf, data_len);
+        this->srv->received(this->srv, cli, rcv_buf, data_len);
       }
     }
   }
@@ -104,4 +112,26 @@ void ClientService::stopThread() {
   this->thread = NULL;
 }
 
-void ClientService::listen(TcpClient *client) {}
+void ClientService::addClient(TcpClient *client) {
+  this->clients_.push_back(client);
+}
+
+/* If client service thread is blocked on select(), we cannot modify
+ * active_fd_set since it being used by select(). If service thread is
+ * servicing clients in a for loop, we cannot modify the active_fd_set since
+ * it is being read by client service thread (read - write conflict) */
+void ClientService::listen(TcpClient *client) {
+  /* Connection manager therad cancels the client service thread at cancellation
+   * points(pthread_cancel).
+   * Connection manager waits for the cancellation to complete (pthread_join)
+   * Connection manager updates client DBs
+   * Connection manager restart the client service thread
+   */
+  this->stopThread();
+  printf("client service thread is cancelled\n");
+
+  this->addClient(client);
+
+  this->thread = (pthread_t *)calloc(1, sizeof(pthread_t));
+  this->startThread();
+}

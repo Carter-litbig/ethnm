@@ -9,8 +9,7 @@ static void printClient(const TcpClient* cli) {
 }
 
 static void printServer(const TcpServer* srv) {
-  printf("[%s, %d]\n", network_convert_ip_n_to_p(srv->ip, 0),
-         htons(srv->port));
+  printf("[%s, %d]\n", network_convert_ip_n_to_p(srv->ip, 0), htons(srv->port));
 }
 
 static void connectedListener(const TcpServer* srv, const TcpClient* cli) {
@@ -22,7 +21,9 @@ static void connectedListener(const TcpServer* srv, const TcpClient* cli) {
 static void disconnectedListener(const TcpServer* srv, const TcpClient* cli) {}
 
 static void receivedListener(const TcpServer*, const TcpClient*,
-                             unsigned char* msg, uint16_t len) {}
+                             unsigned char* msg, uint16_t len) {
+  printf("%s() bytes received: %d\n", __FUNCTION__, len);
+}
 
 int main(int argc, char** argv) {
   TcpServer* srv1 = new TcpServer("127.0.0.1", 40000, "tcp server1");

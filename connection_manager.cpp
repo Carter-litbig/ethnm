@@ -82,7 +82,7 @@ void ConnectionManager::startThreadInternal() {
     }
 
     /* Update Client DB */
-    this->srv->updateClient(cli);
+    this->srv->addClient(cli);
 
     printf("connection accepted from client [%s, %d]\n",
            network_convert_ip_n_to_p(htonl(c_addr.sin_addr.s_addr), 0),

@@ -35,7 +35,7 @@ class TcpServer {
   void start();
   void stop();
 
-  void updateClient(TcpClient* client);
+  void addClient(TcpClient* client);
 
   ClientConnected connected;
   ClientDisconnected disconnected;

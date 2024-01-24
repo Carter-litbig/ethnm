@@ -22,7 +22,7 @@ static void disconnectedListener(const TcpServer* srv, const TcpClient* cli) {}
 
 static void receivedListener(const TcpServer*, const TcpClient*,
                              unsigned char* msg, uint16_t len) {
-  printf("%s() bytes received: %d\n", __FUNCTION__, len);
+  printf("%s() bytes received: %d, msg: %s\n", __FUNCTION__, len, msg);
 }
 
 int main(int argc, char** argv) {

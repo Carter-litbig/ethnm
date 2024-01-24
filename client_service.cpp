@@ -73,7 +73,6 @@ void ClientService::startThreadInternal() {
       if (FD_ISSET(cli->fd, &this->active_fd_set)) {
         data_len = recvfrom(cli->fd, rcv_buf, CLI_SVC_RCV_BUF_SIZE, 0,
                             (struct sockaddr *)&addr, &addr_len);
-        printf("recvfrom: \n");
       }
 
       if (data_len == 0) {
@@ -85,6 +84,7 @@ void ClientService::startThreadInternal() {
         this->srv->received(this->srv, cli, rcv_buf, data_len);
       }
     }
+    memset(rcv_buf, 0, data_len);
   }
 }
 

@@ -32,22 +32,22 @@ class TcpServer {
   TcpServer(std::string ip, uint16_t port, std::string name);
   ~TcpServer();
 
-  void start();
-  void stop();
+  void Start();
+  void Stop();
 
-  void addClient(TcpClient* client);
+  void AddClient(TcpClient* client);
 
   ClientConnected connected;
   ClientDisconnected disconnected;
   ClientReceived received;
 
   /* Register listeners for application */
-  void registerListener(ClientConnected, ClientDisconnected, ClientReceived);
+  void RegisterListener(ClientConnected, ClientDisconnected, ClientReceived);
 
-  void display();
+  void Display();
 
  private:
-  ConnectionManager* conn_mgr_;
-  ClientDB* cli_db_;
-  ClientService* cli_svc_;
+  ConnectionManager* connection_manager_;
+  ClientDB* client_db_;
+  ClientService* client_service_;
 };

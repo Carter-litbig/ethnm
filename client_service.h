@@ -8,19 +8,19 @@ class TcpServer;
 
 class ClientService {
  public:
-  TcpServer* srv;
+  TcpServer* server;
 
-  ClientService(TcpServer* srv);
+  ClientService(TcpServer* server);
   ~ClientService();
 
-  void startThread();
-  void startThreadInternal();
-  void stopThread();
-  void listen(TcpClient* client);
+  void StartThread();
+  void StartThreadInternal();
+  void StopThread();
+  void Listen(TcpClient* client);
 
-  int getMaxFd();
-  void copyClientFd(fd_set*);
-  void addClient(TcpClient* client);
+  int GetMaxFd();
+  void CopyClientFd(fd_set*);
+  void AddClient(TcpClient* client);
 
  private:
   int max_fd;

@@ -4,17 +4,17 @@
 #include <netinet/in.h>
 #include <memory.h>
 #include <errno.h>
-#include <unistd.h> // for sleep
+#include <unistd.h>  // for sleep
 
 #include "client_service.h"
 #include "tcp_server.h"
 #include "tcp_client.h"
+#include "msg_handler.h"
 
-#define CLI_SVC_RCV_BUF_SIZE 1024
-unsigned char rcv_buf[CLI_SVC_RCV_BUF_SIZE];
+unsigned char data[kBufferSize];
 
-ClientService::ClientService(TcpServer *srv) {
-  this->srv = srv;
+ClientService::ClientService(TcpServer *server) {
+  this->server = server;
   this->max_fd = 0;
   FD_ZERO(&this->active_fd_set);
   FD_ZERO(&this->backup_fd_set);
@@ -23,7 +23,7 @@ ClientService::ClientService(TcpServer *srv) {
 
 ClientService::~ClientService() {}
 
-int ClientService::getMaxFd() {
+int ClientService::GetMaxFd() {
   int max_fd_lcl = 0;
 
   TcpClient *cli;
@@ -38,7 +38,7 @@ int ClientService::getMaxFd() {
   return max_fd_lcl;
 }
 
-void ClientService::copyClientFd(fd_set *fdset) {
+void ClientService::CopyClientFd(fd_set *fdset) {
   TcpClient *cli;
   std::list<TcpClient *>::iterator it;
 
@@ -48,7 +48,7 @@ void ClientService::copyClientFd(fd_set *fdset) {
   }
 }
 
-void ClientService::startThreadInternal() {
+void ClientService::StartThreadInternal() {
   /* Invoke select system call on all clients present in client db */
   int data_len;
   TcpClient *cli, *next_cli;
@@ -58,9 +58,9 @@ void ClientService::startThreadInternal() {
   socklen_t addr_len = sizeof(addr);
 
   /* Copy all clients fd */
-  this->max_fd = this->getMaxFd();
+  this->max_fd = this->GetMaxFd();
   FD_ZERO(&this->backup_fd_set);
-  this->copyClientFd(&this->backup_fd_set);
+  this->CopyClientFd(&this->backup_fd_set);
 
   while (true) {
     memcpy(&this->active_fd_set, &this->backup_fd_set, sizeof(fd_set));
@@ -71,7 +71,7 @@ void ClientService::startThreadInternal() {
       next_cli = *(++it);
 
       if (FD_ISSET(cli->fd, &this->active_fd_set)) {
-        data_len = recvfrom(cli->fd, rcv_buf, CLI_SVC_RCV_BUF_SIZE, 0,
+        data_len = recvfrom(cli->fd, data, kBufferSize, 0,
                             (struct sockaddr *)&addr, &addr_len);
       }
 
@@ -80,39 +80,43 @@ void ClientService::startThreadInternal() {
         sleep(1);
       }
 
-      if (this->srv->received) {
-        this->srv->received(this->srv, cli, rcv_buf, data_len);
+      if (cli->msg_handler) {
+        cli->msg_handler->Process(cli, data, data_len);
+      }
+
+      if (this->server->received) {
+        this->server->received(this->server, cli, data, data_len);
       }
     }
-    memset(rcv_buf, 0, data_len);
+    memset(data, 0, data_len);
   }
 }
 
-void *client_service_thread(void *arg) {
+void *ClientServiceThread(void *arg) {
   ClientService *cs = (ClientService *)arg;
 
-  pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
-  pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
+  pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, nullptr);
+  pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, nullptr);
 
-  cs->startThreadInternal();
-  return NULL;
+  cs->StartThreadInternal();
+  return nullptr;
 }
 
-void ClientService::startThread() {
+void ClientService::StartThread() {
   pthread_attr_t attr;
   pthread_attr_init(&attr);
-  pthread_create(this->thread, &attr, client_service_thread, (void *)this);
-  printf("service started: client_service_thread\n");
+  pthread_create(this->thread, &attr, ClientServiceThread, (void *)this);
+  printf("service started: ClientServiceThread\n");
 }
 
-void ClientService::stopThread() {
+void ClientService::StopThread() {
   pthread_cancel(*this->thread);
-  pthread_join(*this->thread, NULL);
+  pthread_join(*this->thread, nullptr);
   free(this->thread);
-  this->thread = NULL;
+  this->thread = nullptr;
 }
 
-void ClientService::addClient(TcpClient *client) {
+void ClientService::AddClient(TcpClient *client) {
   this->clients_.push_back(client);
 }
 
@@ -120,18 +124,18 @@ void ClientService::addClient(TcpClient *client) {
  * active_fd_set since it being used by select(). If service thread is
  * servicing clients in a for loop, we cannot modify the active_fd_set since
  * it is being read by client service thread (read - write conflict) */
-void ClientService::listen(TcpClient *client) {
+void ClientService::Listen(TcpClient *client) {
   /* Connection manager therad cancels the client service thread at cancellation
    * points(pthread_cancel).
    * Connection manager waits for the cancellation to complete (pthread_join)
    * Connection manager updates client DBs
    * Connection manager restart the client service thread
    */
-  this->stopThread();
+  this->StopThread();
   printf("client service thread is cancelled\n");
 
-  this->addClient(client);
+  this->AddClient(client);
 
   this->thread = (pthread_t *)calloc(1, sizeof(pthread_t));
-  this->startThread();
+  this->StartThread();
 }

@@ -8,33 +8,33 @@ TcpServer::TcpServer(std::string ip, uint16_t port, std::string name) {
   this->port = port;
   this->name = name;
 
-  this->conn_mgr_ = new ConnectionManager(this);
-  this->cli_db_ = new ClientDB(this);
-  this->cli_svc_ = new ClientService(this);
+  this->connection_manager_ = new ConnectionManager(this);
+  this->client_db_ = new ClientDB(this);
+  this->client_service_ = new ClientService(this);
 }
 
-void TcpServer::start() {
+void TcpServer::Start() {
   /* Start connection manager */
-  this->conn_mgr_->startThread();
+  this->connection_manager_->StartThread();
 
   /* Start client service */
-  this->cli_svc_->startThread();
+  this->client_service_->StartThread();
 
   /* Init client db */
-  this->cli_db_->create();
+  this->client_db_->Create();
 
-  printf("tcp server start [%s, %d]\nok\n",
+  printf("tcp server Start [%s, %d]\nok\n",
          network_convert_ip_n_to_p(this->ip, 0), this->port);
 }
 
-void TcpServer::stop() {}
+void TcpServer::Stop() {}
 
-void TcpServer::addClient(TcpClient* client) {
-  this->cli_db_->update(client);
-  this->cli_svc_->listen(client);
+void TcpServer::AddClient(TcpClient* client) {
+  this->client_db_->Update(client);
+  this->client_service_->Listen(client);
 }
 
-void TcpServer::registerListener(ClientConnected connected,
+void TcpServer::RegisterListener(ClientConnected connected,
                                  ClientDisconnected disconnected,
                                  ClientReceived received) {
   this->connected = connected;
@@ -42,10 +42,10 @@ void TcpServer::registerListener(ClientConnected connected,
   this->received = received;
 }
 
-void TcpServer::display() {
+void TcpServer::Display() {
   printf("server name: %s\n", this->name.c_str());
   printf("listening on: [%s, %d]\n", network_convert_ip_n_to_p(this->ip, 0),
          this->port);
 
-  this->cli_db_->display();
+  this->client_db_->Display();
 }

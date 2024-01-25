@@ -9,12 +9,12 @@
 
 #include "tcp_client.h"
 
-ConnectionManager::ConnectionManager(TcpServer* srv) {
-  this->srv = srv;
+ConnectionManager::ConnectionManager(TcpServer* server) {
+  this->server = server;
 
   this->fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   if (this->fd < 0) {
-    printf("error: could not create accept fd\n");
+    printf("error: could not Create accept fd\n");
     exit(0);
   }
 
@@ -24,13 +24,13 @@ ConnectionManager::ConnectionManager(TcpServer* srv) {
 ConnectionManager::~ConnectionManager() {}
 
 /* static 에서는 private fd 접근이 안되어 이의 접근을 위해 별도로 만듦 */
-void ConnectionManager::startThreadInternal() {
+void ConnectionManager::StartThreadInternal() {
   int opt = 1;
   struct sockaddr_in s_addr;  // server address
 
   s_addr.sin_family = AF_INET;
-  s_addr.sin_port = htons(this->srv->port);
-  s_addr.sin_addr.s_addr = htonl(this->srv->ip);
+  s_addr.sin_port = htons(this->server->port);
+  s_addr.sin_addr.s_addr = htonl(this->server->ip);
 
   if (setsockopt(this->fd, SOL_SOCKET, SO_REUSEADDR, (char*)&opt, sizeof(opt)) <
       0) {
@@ -48,13 +48,13 @@ void ConnectionManager::startThreadInternal() {
   if (bind(this->fd, (struct sockaddr*)&s_addr, sizeof(struct sockaddr)) ==
       -1) {
     printf("error: connmgr socket bind failed[%s(0x%x), %d], error=%d",
-           network_convert_ip_n_to_p(this->srv->ip, 0), this->srv->ip,
-           this->srv->port, errno);
+           network_convert_ip_n_to_p(this->server->ip, 0), this->server->ip,
+           this->server->port, errno);
     exit(0);
   }
 
   if (listen(this->fd, 5) < 0) {
-    printf("listen failed\n");
+    printf("Listen failed\n");
     exit(0);
   }
 
@@ -74,15 +74,15 @@ void ConnectionManager::startThreadInternal() {
       continue;
     }
 
-    TcpClient* cli =
-        new TcpClient(this->srv, c_addr.sin_addr.s_addr, c_addr.sin_port, fd);
+    TcpClient* cli = new TcpClient(this->server, c_addr.sin_addr.s_addr,
+                                   c_addr.sin_port, fd);
 
-    if (this->srv->connected != NULL) {
-      this->srv->connected(this->srv, cli);
+    if (this->server->connected != nullptr) {
+      this->server->connected(this->server, cli);
     }
 
     /* Update Client DB */
-    this->srv->addClient(cli);
+    this->server->AddClient(cli);
 
     printf("connection accepted from client [%s, %d]\n",
            network_convert_ip_n_to_p(htonl(c_addr.sin_addr.s_addr), 0),
@@ -92,19 +92,19 @@ void ConnectionManager::startThreadInternal() {
   }
 }
 
-static void* connection_manager_thread(void* arg) {
+static void* ConnectionManagerThread(void* arg) {
   ConnectionManager* cm = (ConnectionManager*)arg;
 
-  cm->startThreadInternal();
+  cm->StartThreadInternal();
 }
 
-void ConnectionManager::startThread() {
+void ConnectionManager::StartThread() {
   /* Start a thread */
-  if (pthread_create(this->thread, NULL, connection_manager_thread,
+  if (pthread_create(this->thread, nullptr, ConnectionManagerThread,
                      (void*)this)) {
     printf("%s() thread creation failed, error=%d\n", __FUNCTION__, errno);
     exit(0);
   }
 
-  printf("service started: connection_manager_thread:\n");
+  printf("service started: ConnectionManagerThread:\n");
 }

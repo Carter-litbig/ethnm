@@ -3,6 +3,9 @@
 #include <stdint.h>
 
 class TcpServer;
+class MsgHandler;
+
+const int kBufferSize = 1024;
 
 class TcpClient {
   public:
@@ -10,9 +13,10 @@ class TcpClient {
   uint16_t port;
   int fd;
 
-  TcpServer* srv;
+  TcpServer* server;
+  MsgHandler* msg_handler;
 
-  TcpClient(TcpServer* srv, uint32_t ip, uint16_t port, int fd);
+  TcpClient(TcpServer* server, uint32_t ip, uint16_t port, int fd);
 
-  void display();
+  void Display();
 };

@@ -7,7 +7,9 @@ OBJS=client_db.o \
 			connection_manager.o  \
 			tcp_server.o \
 			network_utils.o \
-			tcp_client.o
+			tcp_client.o \
+			ByteCircularBuffer.o \
+			msg_handler.o
 
 tcpsrv.exe:tcpsrv.o ${OBJS}
 	${CC} ${CFLAGS} ${OBJS} tcpsrv.o -o tcpsrv.exe ${LIBS}
@@ -29,6 +31,12 @@ network_utils.o:network_utils.cpp
 
 tcp_client.o:tcp_client.cpp
 	${CC} ${CFLAGS} -c tcp_client.cpp -o tcp_client.o
+
+ByteCircularBuffer.o:ByteCircularBuffer.cpp
+	${CC} ${CFLAGS} -c ByteCircularBuffer.cpp -o ByteCircularBuffer.o	
+
+msg_handler.o:msg_handler.cpp
+	${CC} ${CFLAGS} -c msg_handler.cpp -o msg_handler.o	
 
 clean:
 	rm -f *.o

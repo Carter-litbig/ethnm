@@ -7,13 +7,13 @@ class TcpServer;
 
 class ConnectionManager {
  public:
-  TcpServer* srv;
+  TcpServer* server;
 
-  ConnectionManager(TcpServer* srv);
+  ConnectionManager(TcpServer* server);
   ~ConnectionManager();
 
-  void startThread();
-  void startThreadInternal();
+  void StartThread();
+  void StartThreadInternal();
 
  private:
   int fd; /* socket file descriptor */

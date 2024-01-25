@@ -8,14 +8,14 @@ class TcpServer;
 
 class ClientDB {
  public:
-  TcpServer* srv;
+  TcpServer* server;
 
-  ClientDB(TcpServer* srv);
+  ClientDB(TcpServer* server);
   ~ClientDB();
 
-  void create();
-  void update(TcpClient* client);
-  void display();
+  void Create();
+  void Update(TcpClient* client);
+  void Display();
 
  private:
   std::list<TcpClient*> clients_;

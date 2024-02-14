@@ -1,5 +1,5 @@
 #pragma once
-// tcpcli
+
 #include <stdint.h>
 
 const int kBcbSize = 10240;
@@ -14,7 +14,7 @@ enum class MsgSizeType {
 typedef struct ByteCircularBuffer_ ByteCircularBuffer;
 class TcpClient;
 
-class MsgHandler {
+class MsgDelimiter {
  private:
  protected:
   ByteCircularBuffer* bcb;
@@ -22,11 +22,11 @@ class MsgHandler {
 
  public:
   virtual bool IsFlushable() = 0;
-  virtual void ProcessMsg() = 0;
+  virtual void ProcessMsg(TcpClient*) = 0;
 
-  MsgHandler(uint16_t buf_len);
-  MsgHandler();
-  ~MsgHandler();
+  MsgDelimiter(uint16_t buf_len);
+  MsgDelimiter();
+  ~MsgDelimiter();
 
   void Destroy();
   void Process(TcpClient*, unsigned char* msg, uint16_t size);

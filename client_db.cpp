@@ -11,10 +11,10 @@ void ClientDB::Update(TcpClient* client) { this->clients_.push_back(client); }
 
 void ClientDB::Display() {
   std::list<TcpClient*>::iterator it;
-  TcpClient* cli;
+  TcpClient* client;
 
   for (it = this->clients_.begin(); it != this->clients_.end(); ++it) {
-    cli = *it;
-    cli->Display();
+    client = *it;
+    client->Display();
   }
 }

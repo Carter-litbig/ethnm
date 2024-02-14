@@ -8,6 +8,8 @@
 #include "network_utils.h"
 
 #include "tcp_client.h"
+#include "msg_delimiter.h"
+#include "msg_delimiter_fixed.h"
 
 ConnectionManager::ConnectionManager(TcpServer* server) {
   this->server = server;
@@ -74,15 +76,17 @@ void ConnectionManager::StartThreadInternal() {
       continue;
     }
 
-    TcpClient* cli = new TcpClient(this->server, c_addr.sin_addr.s_addr,
-                                   c_addr.sin_port, fd);
+    TcpClient* client = new TcpClient(this->server, c_addr.sin_addr.s_addr,
+                                      c_addr.sin_port, fd);
 
     if (this->server->connected != nullptr) {
-      this->server->connected(this->server, cli);
+      this->server->connected(this->server, client);
     }
 
+    client->msg_delimiter = new MsgDelimiterFixed(27);
+
     /* Update Client DB */
-    this->server->AddClient(cli);
+    this->server->AddClient(client);
 
     printf("connection accepted from client [%s, %d]\n",
            network_convert_ip_n_to_p(htonl(c_addr.sin_addr.s_addr), 0),

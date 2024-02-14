@@ -2,26 +2,26 @@
 #include <stdlib.h>
 #include <memory.h>
 #include <assert.h>
-#include "msg_handler.h"
+#include "msg_delimiter.h"
 #include "ByteCircularBuffer.h"
 #include "tcp_client.h"
 
-MsgHandler::MsgHandler(uint16_t buf_len) {
+MsgDelimiter::MsgDelimiter(uint16_t buf_len) {
   this->bcb = BCBCreateNew(buf_len);
   this->buf = (unsigned char*)calloc(kBufferSize, sizeof(unsigned char));
 }
 
-MsgHandler::MsgHandler() {
+MsgDelimiter::MsgDelimiter() {
   this->bcb = BCBCreateNew(kBcbSize);
   this->buf = (unsigned char*)calloc(kBufferSize, sizeof(unsigned char));
 }
 
-MsgHandler::~MsgHandler() {
+MsgDelimiter::~MsgDelimiter() {
   assert(!this->bcb);
   assert(!this->buf);
 }
 
-void MsgHandler::Destroy() {
+void MsgDelimiter::Destroy() {
   if (this->bcb) {
     BCBFree(this->bcb);
     this->bcb = nullptr;
@@ -33,10 +33,10 @@ void MsgHandler::Destroy() {
   }
 }
 
-void MsgHandler::Process(TcpClient* client, unsigned char* msg, uint16_t size) {
-  assert(BCBWrite(client->msg_handler->bcb, msg, size));
+void MsgDelimiter::Process(TcpClient* client, unsigned char* msg, uint16_t size) {
+  assert(BCBWrite(client->msg_delimiter->bcb, msg, size));
 
   if (!this->IsFlushable()) return;
 
-  // this->ProcessMsg(client);
+  this->ProcessMsg(client);
 }

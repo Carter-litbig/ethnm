@@ -9,7 +9,7 @@
 #include "client_service.h"
 #include "tcp_server.h"
 #include "tcp_client.h"
-#include "msg_handler.h"
+#include "msg_delimiter.h"
 
 unsigned char data[kBufferSize];
 
@@ -26,32 +26,32 @@ ClientService::~ClientService() {}
 int ClientService::GetMaxFd() {
   int max_fd_lcl = 0;
 
-  TcpClient *cli;
+  TcpClient *client;
   std::list<TcpClient *>::iterator it;
 
   for (it = this->clients_.begin(); it != this->clients_.end(); ++it) {
-    cli = *it;
-    if (cli->fd > max_fd_lcl) {
-      max_fd_lcl = cli->fd;
+    client = *it;
+    if (client->fd > max_fd_lcl) {
+      max_fd_lcl = client->fd;
     }
   }
   return max_fd_lcl;
 }
 
 void ClientService::CopyClientFd(fd_set *fdset) {
-  TcpClient *cli;
+  TcpClient *client;
   std::list<TcpClient *>::iterator it;
 
   for (it = this->clients_.begin(); it != this->clients_.end(); ++it) {
-    cli = *it;
-    FD_SET(cli->fd, fdset);
+    client = *it;
+    FD_SET(client->fd, fdset);
   }
 }
 
 void ClientService::StartThreadInternal() {
   /* Invoke select system call on all clients present in client db */
   int data_len;
-  TcpClient *cli, *next_cli;
+  TcpClient *client, *next_client;
   struct sockaddr_in addr;
   std::list<TcpClient *>::iterator it;
 
@@ -66,12 +66,12 @@ void ClientService::StartThreadInternal() {
     memcpy(&this->active_fd_set, &this->backup_fd_set, sizeof(fd_set));
     select(this->max_fd + 1, &this->active_fd_set, 0, 0, 0);
 
-    for (it = this->clients_.begin(), cli = *it; it != this->clients_.end();
-         cli = next_cli) {
-      next_cli = *(++it);
+    for (it = this->clients_.begin(), client = *it; it != this->clients_.end();
+         client = next_client) {
+      next_client = *(++it);
 
-      if (FD_ISSET(cli->fd, &this->active_fd_set)) {
-        data_len = recvfrom(cli->fd, data, kBufferSize, 0,
+      if (FD_ISSET(client->fd, &this->active_fd_set)) {
+        data_len = recvfrom(client->fd, data, kBufferSize, 0,
                             (struct sockaddr *)&addr, &addr_len);
       }
 
@@ -80,12 +80,10 @@ void ClientService::StartThreadInternal() {
         sleep(1);
       }
 
-      if (cli->msg_handler) {
-        cli->msg_handler->Process(cli, data, data_len);
-      }
-
-      if (this->server->received) {
-        this->server->received(this->server, cli, data, data_len);
+      if (client->msg_delimiter) {
+        client->msg_delimiter->Process(client, data, data_len);
+      } else if (this->server->received) {
+        this->server->received(this->server, client, data, data_len);
       }
     }
     memset(data, 0, data_len);

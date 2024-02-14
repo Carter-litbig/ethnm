@@ -3,7 +3,7 @@
 #include <stdint.h>
 
 class TcpServer;
-class MsgHandler;
+class MsgDelimiter;
 
 const int kBufferSize = 1024;
 
@@ -14,7 +14,7 @@ class TcpClient {
   int fd;
 
   TcpServer* server;
-  MsgHandler* msg_handler;
+  MsgDelimiter* msg_delimiter;
 
   TcpClient(TcpServer* server, uint32_t ip, uint16_t port, int fd);
 

@@ -1,7 +1,7 @@
 CC=g++
 CFLAGS=-g
 TARGET:tcpsrv.exe
-LIBS=-lpthread
+LIBS=-lpthread -L CommandParser -lcli -lrt
 OBJS=client_db.o \
 	 		client_service.o \
 			connection_manager.o  \
@@ -11,7 +11,8 @@ OBJS=client_db.o \
 			ByteCircularBuffer.o \
 			msg_delimiter.o \
 			msg_delimiter_fixed.o \
-			msg_delimiter_var.o
+			msg_delimiter_var.o \
+			CommandParser/libcli.a
 
 tcpsrv.exe:tcpsrv.o ${OBJS}
 	${CC} ${CFLAGS} ${OBJS} tcpsrv.o -o tcpsrv.exe ${LIBS}
@@ -46,6 +47,10 @@ msg_delimiter_fixed.o:msg_delimiter_fixed.cpp
 msg_delimiter_var.o:msg_delimiter_var.cpp
 	${CC} ${CFLAGS} -c msg_delimiter_var.cpp -o msg_delimiter_var.o	
 
+CommandParser/libcli.a:
+	(cd CommandParser; make)
+
 clean:
 	rm -f *.o
 	rm -f *exe
+	(cd CommandParser; make clean)

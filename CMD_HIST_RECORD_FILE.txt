@@ -1,0 +1,7 @@
+.
+.
+.
+conf tcp-s blah
+.
+conf tcp-srv s1
+conf tcp-srv s1 start

@@ -10,7 +10,8 @@ OBJS=client_db.o \
 			tcp_client.o \
 			ByteCircularBuffer.o \
 			msg_delimiter.o \
-			msg_delimiter_fixed.o
+			msg_delimiter_fixed.o \
+			msg_delimiter_var.o
 
 tcpsrv.exe:tcpsrv.o ${OBJS}
 	${CC} ${CFLAGS} ${OBJS} tcpsrv.o -o tcpsrv.exe ${LIBS}
@@ -41,6 +42,9 @@ msg_delimiter.o:msg_delimiter.cpp
 
 msg_delimiter_fixed.o:msg_delimiter_fixed.cpp
 	${CC} ${CFLAGS} -c msg_delimiter_fixed.cpp -o msg_delimiter_fixed.o		
+
+msg_delimiter_var.o:msg_delimiter_var.cpp
+	${CC} ${CFLAGS} -c msg_delimiter_var.cpp -o msg_delimiter_var.o	
 
 clean:
 	rm -f *.o

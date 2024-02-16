@@ -25,13 +25,13 @@ bool MsgDelimiterFixed::IsFlushable() {
 void MsgDelimiterFixed::Destroy() { this->MsgDelimiter::Destroy(); }
 
 void MsgDelimiterFixed::ProcessMsg(TcpClient* client) {
-  uint16_t data;
+  uint16_t read_size;
 
   if (!this->IsFlushable()) return;
 
-  while (data = BCBRead(this->MsgDelimiter::bcb, this->MsgDelimiter::buf,
-                        this->fixed_size, true)) {
-    client->server->received(client->server, client,
-                             this->MsgDelimiter::buf, data);
+  while (read_size = BCBRead(this->MsgDelimiter::bcb, this->MsgDelimiter::buf,
+                             this->fixed_size, true)) {
+    client->server->received(client->server, client, this->MsgDelimiter::buf,
+                             read_size);
   }
 }

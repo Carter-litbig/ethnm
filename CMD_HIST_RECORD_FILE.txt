@@ -5,3 +5,12 @@ conf tcp-s blah
 .
 conf tcp-srv s1
 conf tcp-srv s1 start
+conf tcp-s s1 
+conf tcp-s s1 /
+conf tcp-s s1 /
+conf tcp-s s1 /
+start
+cd..
+s2 /
+start
+cd

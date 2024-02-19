@@ -31,23 +31,71 @@ static void ReceivedListener(const TcpServer*, const TcpClient*,
   printf("%s() bytes received: %d, msg: %s\n", __FUNCTION__, len, msg);
 }
 
-int CfgTcpSrvHandler(param_t* param, ser_buff_t* s_buf, op_mode enable) {
+std::list<TcpServer*> srv_list;
+uint16_t default_port = 40000;
+const char* default_ip = "127.0.0.1";
+
+static TcpServer* CliLookupServer(std::string name) {
+  TcpServer* srv;
+
+  std::list<TcpServer*>::iterator it;
+
+  for (it = srv_list.begin(); it != srv_list.end(); ++it) {
+    srv = *it;
+    if (srv->name == name) {
+      return srv;
+    }
+  }
+
+  return NULL;
+}
+
+int CliCfgTcpSrvHandler(param_t* param, ser_buff_t* s_buf, op_mode enable) {
   // printf("%s\n", __FUNCTION__);
 
   int cmd;
+  const char* srv_name = NULL;
+  tlv_struct_t* tlv = NULL;
+  TcpServer* srv = NULL;
+  char* ip = (char*)default_ip;
+  uint16_t port = default_port;
 
   cmd = EXTRACT_CMD_CODE(s_buf);
 
+  TLV_LOOP_BEGIN(s_buf, tlv) {
+    if (strncmp(tlv->leaf_id, "srv-name", strlen("srv-name")) == 0) {
+      srv_name = tlv->value;
+    }
+  }
+  TLV_LOOP_END;
+
   switch (cmd) {
     case TCP_SRV_CREATE:
-      printf("create invoked\n");
+      /* config tcp-srv <name> */
+      srv = CliLookupServer(std::string(srv_name));
+      if (srv) {
+        printf("error: tcp server already exist\n");
+        return -1;
+      }
+      srv = new TcpServer(std::string(ip), port, std::string(srv_name));
+      srv_list.push_back(srv);
+      srv->RegisterListener(ConnectedListener, DisconnectedListener,
+                            ReceivedListener);
+      // printf("create invoked\n");
       break;
 
     case TCP_SRV_START:
-      printf("start invoked\n");
+      /* config tcp-srv <name> start */
+      srv = CliLookupServer(std::string(srv_name));
+      if (!srv) {
+        printf("error: tcp server do not exist\n");
+        return -1;
+      }
+      srv->Start();
+      // printf("start invoked\n");
       break;
     default:
-      break;   
+      break;
   }
 
   return 0;
@@ -66,15 +114,15 @@ static void CliBuildConfigTree(void) {
     {
       /* config tcp-srv <name> */
       static param_t name;
-      init_param(&name, LEAF, NULL, CfgTcpSrvHandler, NULL, STRING, "name",
-                 "Name");
+      init_param(&name, LEAF, NULL, CliCfgTcpSrvHandler, NULL, STRING,
+                 "srv-name", "Server name");
       libcli_register_param(&tcp_srv, &name);
       set_param_cmd_code(&name, TCP_SRV_CREATE);
       {
         /* config tcp-srv <name> start */
         static param_t start;
-        init_param(&start, CMD, "start", CfgTcpSrvHandler, NULL, INVALID, NULL,
-                   "Start");
+        init_param(&start, CMD, "start", CliCfgTcpSrvHandler, NULL, INVALID,
+                   NULL, "Start");
         libcli_register_param(&name, &start);
         set_param_cmd_code(&start, TCP_SRV_START);
       }

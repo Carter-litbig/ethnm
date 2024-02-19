@@ -65,6 +65,10 @@ int CliCfgTcpSrvHandler(param_t* param, ser_buff_t* s_buf, op_mode enable) {
   TLV_LOOP_BEGIN(s_buf, tlv) {
     if (strncmp(tlv->leaf_id, "srv-name", strlen("srv-name")) == 0) {
       srv_name = tlv->value;
+    } else if (strncmp(tlv->leaf_id, "srv-ip", strlen("srv-ip")) == 0) {
+      ip = tlv->value;
+    } else if (strncmp(tlv->leaf_id, "srv-port", strlen("srv-port")) == 0) {
+      port = atoi(tlv->value);
     }
   }
   TLV_LOOP_END;
@@ -118,6 +122,20 @@ static void CliBuildConfigTree(void) {
                  "srv-name", "Server name");
       libcli_register_param(&tcp_srv, &name);
       set_param_cmd_code(&name, TCP_SRV_CREATE);
+      {
+        /* config tcp-srv <ip> ... */
+        static param_t ip;
+        init_param(&ip, LEAF, 0, NULL, NULL, IPV4, "srv-ip", "Server ip");
+        libcli_register_param(&name, &ip);
+        {
+          /* config tcp-srv <ip> <port> */
+          static param_t port;
+          init_param(&port, LEAF, 0, CliCfgTcpSrvHandler, 0, INT, "srv-port",
+                     "Server port");
+          libcli_register_param(&ip, &port);
+          set_param_cmd_code(&port, TCP_SRV_CREATE);
+        }
+      }
       {
         /* config tcp-srv <name> start */
         static param_t start;

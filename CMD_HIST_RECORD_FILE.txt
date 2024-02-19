@@ -14,3 +14,25 @@ cd..
 s2 /
 start
 cd
+conf tcp-s s1 /
+start
+cd..
+s2 127.0.0.1 41000
+s2 start
+conf tcp-s s1 /
+start
+cd..
+s2 127.0.0.1 41000
+s2 start
+conf tcp-s s1 /
+start
+cd ..
+cd..
+conf tcp-s s1 /
+start
+cd..
+s2 127.0.0.1 41000
+s2 start
+s3 127.0.0.1 42000
+s3 start
+ps

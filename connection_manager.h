@@ -15,6 +15,9 @@ class ConnectionManager {
   void StartThread();
   void StartThreadInternal();
 
+  void Stop();
+  void StopThread();
+
  private:
   int fd; /* socket file descriptor */
   pthread_t* thread;

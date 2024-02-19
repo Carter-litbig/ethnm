@@ -11,6 +11,8 @@
 #include "msg_delimiter.h"
 #include "msg_delimiter_fixed.h"
 
+#include <unistd.h> // for close() socket
+
 ConnectionManager::ConnectionManager(TcpServer* server) {
   this->server = server;
 
@@ -115,4 +117,25 @@ void ConnectionManager::StartThread() {
   }
 
   printf("service started: ConnectionManagerThread:\n");
+}
+
+void ConnectionManager::StopThread() {
+  if (!this->thread) return;
+  pthread_cancel(*this->thread);
+
+  /* Wait until the thread is cancelled successfully */
+  free(this->thread);
+  this->thread = NULL;
+}
+
+void ConnectionManager::Stop() {
+  /* 1. Stop the connmgr thread if it is running */
+  this->StopThread();
+
+  /* 2. Release the resource (accept_fd) */
+  close(this->fd);
+  this->fd = 0;
+
+  /* 3. Delete this instance of connmgr */
+  delete this;
 }

@@ -57,6 +57,9 @@ class TcpServer {
   void UnSetBit(uint32_t bit);
   bool IsBitSet(uint32_t bit);
 
+  void StopConnectionAcceptance();
+  void StartConnectionAcceptance();
+
  private:
   ConnectionManager* connection_manager_;
   ClientDB* client_db_;

@@ -9,6 +9,7 @@
 #define TCP_SRV_CREATE 1
 #define TCP_SRV_START 2
 #define TCP_SRV_SHOW 3
+#define TCP_SRV_DISABLE_CONN_ACCEPT 4
 
 static void PrintClient(const TcpClient* cli) {
   printf("[%s, %d]\n", network_convert_ip_n_to_p(htonl(cli->ip), 0),
@@ -99,6 +100,25 @@ int CliCfgTcpSrvHandler(param_t* param, ser_buff_t* s_buf, op_mode mode) {
       srv->Start();
       // printf("start invoked\n");
       break;
+
+    case TCP_SRV_DISABLE_CONN_ACCEPT:
+      srv = CliLookupServer(std::string(srv_name));
+      if (!srv) {
+        printf("error: tcp server do not exist\n");
+        return -1;
+      }
+
+      switch (mode) {
+        case CONFIG_ENABLE:
+          srv->StopConnectionAcceptance();
+          break;
+
+        case CONFIG_DISABLE:
+          srv->StartConnectionAcceptance();
+          break;
+      }
+      break;
+
     default:
       break;
   }
@@ -118,16 +138,25 @@ static void CliBuildConfigTree() {
     libcli_register_param(cfg_hook, &tcp_srv);
     {
       /* config tcp-srv <name> */
-      static param_t name;
-      init_param(&name, LEAF, NULL, CliCfgTcpSrvHandler, NULL, STRING,
+      static param_t srv_name;
+      init_param(&srv_name, LEAF, NULL, CliCfgTcpSrvHandler, NULL, STRING,
                  "srv-name", "Server name");
-      libcli_register_param(&tcp_srv, &name);
-      set_param_cmd_code(&name, TCP_SRV_CREATE);
+      libcli_register_param(&tcp_srv, &srv_name);
+      set_param_cmd_code(&srv_name, TCP_SRV_CREATE);
+      {
+        /* config tcp-srv <name> [no] disable-connection-accept */
+        static param_t dis_conn_accept;
+        init_param(&dis_conn_accept, CMD, "disable-conn-accept",
+                   CliCfgTcpSrvHandler, 0, INVALID, 0,
+                   "Connection accept settings");
+        libcli_register_param(&srv_name, &dis_conn_accept);
+        set_param_cmd_code(&dis_conn_accept, TCP_SRV_DISABLE_CONN_ACCEPT);
+      }
       {
         /* config tcp-srv <ip> ... */
         static param_t ip;
         init_param(&ip, LEAF, 0, NULL, NULL, IPV4, "srv-ip", "Server ip");
-        libcli_register_param(&name, &ip);
+        libcli_register_param(&srv_name, &ip);
         {
           /* config tcp-srv <ip> <port> */
           static param_t port;
@@ -142,11 +171,14 @@ static void CliBuildConfigTree() {
         static param_t start;
         init_param(&start, CMD, "start", CliCfgTcpSrvHandler, NULL, INVALID,
                    NULL, "Start");
-        libcli_register_param(&name, &start);
+        libcli_register_param(&srv_name, &start);
         set_param_cmd_code(&start, TCP_SRV_START);
       }
+      support_cmd_negation(&srv_name);
+      /* do not add any param_t here */
     }
   }
+  support_cmd_negation(cfg_hook);
 }
 
 /* assignment_6 */
@@ -191,11 +223,11 @@ static void CliBuildShowTree() {
   libcli_register_param(show_hook, &tcp_srv);
   {
     /* show tcp-server <name> */
-    static param_t name;
-    init_param(&name, LEAF, NULL, CliShowTcpSrvHandler, NULL, STRING,
+    static param_t srv_name;
+    init_param(&srv_name, LEAF, NULL, CliShowTcpSrvHandler, NULL, STRING,
                "srv-name", "Server name");
-    libcli_register_param(&tcp_srv, &name);
-    set_param_cmd_code(&name, TCP_SRV_SHOW);
+    libcli_register_param(&tcp_srv, &srv_name);
+    set_param_cmd_code(&srv_name, TCP_SRV_SHOW);
   }
 }
 

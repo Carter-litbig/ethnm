@@ -11,6 +11,8 @@ TcpServer::TcpServer(std::string ip, uint16_t port, std::string name) {
   this->connection_manager_ = new ConnectionManager(this);
   this->client_db_ = new ClientDB(this);
   this->client_service_ = new ClientService(this);
+
+  this->SetBit(TCP_SERVER_INITIALIZED);
 }
 
 void TcpServer::Start() {
@@ -25,6 +27,8 @@ void TcpServer::Start() {
 
   printf("tcp server Start [%s, %d]\nok\n",
          network_convert_ip_n_to_p(this->ip, 0), this->port);
+
+  this->SetBit(TCP_SERVER_RUNNING);
 }
 
 void TcpServer::Stop() {}
@@ -53,7 +57,7 @@ void TcpServer::Display() {
   printf("listening on: [%s, %d]\n", network_convert_ip_n_to_p(this->ip, 0),
          this->port);
 
-  printf("Flags :  ");
+  printf("flags:  ");
 
   if (this->IsBitSet(TCP_SERVER_INITIALIZED)) {
     printf("I");
@@ -95,3 +99,11 @@ void TcpServer::SetBit(uint32_t bit) { this->state |= bit; }
 void TcpServer::UnSetBit(uint32_t bit) { this->state &= ~bit; }
 
 bool TcpServer::IsBitSet(uint32_t bit) { return (this->state & bit); }
+
+void TcpServer::StopConnectionAcceptance() {
+  printf("%s() called", __FUNCTION__);
+}
+
+void TcpServer::StartConnectionAcceptance() {
+  printf("%s() called", __FUNCTION__);
+}

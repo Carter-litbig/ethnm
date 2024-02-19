@@ -13,6 +13,9 @@ class TcpClient {
   uint16_t port;
   int fd;
 
+  uint32_t srv_ip;
+  uint16_t srv_port;
+
   TcpServer* server;
   MsgDelimiter* msg_delimiter;
 

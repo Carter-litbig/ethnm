@@ -36,3 +36,24 @@ s2 start
 s3 127.0.0.1 42000
 s3 start
 ps
+conf tcp-s s1 /
+start
+conf tcp-s s1 /
+cd..
+cd..
+cd..
+conf tcp-s s2
+show tcp-s s2
+show tcp-s s1
+conf tcp-s s1 /
+start
+conf tcp-s s1 /
+start
+cd..
+show tcp-srv s1
+show tcp-srv s1
+cd..
+cd..
+show tcp-srv s1
+show tcp-srv s1
+show tcp-srv s1

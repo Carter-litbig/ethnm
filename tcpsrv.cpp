@@ -6,8 +6,9 @@
 #include "CommandParser/libcli.h"
 #include "CommandParser/cmdtlv.h"
 
-#define TCP_SRV_CREATE 1
-#define TCP_SRV_START 2
+#define TCP_SRV_CREATE  1
+#define TCP_SRV_START   2
+#define TCP_SRV_SHOW    3
 
 static void PrintClient(const TcpClient* cli) {
   printf("[%s, %d]\n", network_convert_ip_n_to_p(htonl(cli->ip), 0),
@@ -50,7 +51,7 @@ static TcpServer* CliLookupServer(std::string name) {
   return NULL;
 }
 
-int CliCfgTcpSrvHandler(param_t* param, ser_buff_t* s_buf, op_mode enable) {
+int CliCfgTcpSrvHandler(param_t* param, ser_buff_t* s_buf, op_mode mode) {
   // printf("%s\n", __FUNCTION__);
 
   int cmd;
@@ -105,7 +106,7 @@ int CliCfgTcpSrvHandler(param_t* param, ser_buff_t* s_buf, op_mode enable) {
   return 0;
 }
 
-static void CliBuildConfigTree(void) {
+static void CliBuildConfigTree() {
   /* config tcp-srv <name> */
   param_t* cfg_hook = libcli_get_config_hook();
 
@@ -148,9 +149,55 @@ static void CliBuildConfigTree(void) {
   }
 }
 
-static void CliBuildShowTree(void) {}
+static int CliShowTcpSrvHandler(param_t* param, ser_buff_t* s_buf,
+                                op_mode mode) {
+  int cmd;
+  char* srv_name = NULL;
+  tlv_struct_t* tlv = NULL;
+  TcpServer* srv = NULL;
 
-static void CliBuild(void) {
+  cmd = EXTRACT_CMD_CODE(s_buf);
+
+  TLV_LOOP_BEGIN(s_buf, tlv) {
+    if (strncmp(tlv->leaf_id, "srv-name", strlen("srv-name")) == 0) {
+      srv_name = tlv->value;
+    }
+  }
+  TLV_LOOP_END;
+
+  switch (cmd) {
+    case TCP_SRV_SHOW:
+      srv = CliLookupServer(std::string(srv_name));
+      if (!srv) {
+        printf("error: tcp server do not exist\n");
+        return -1;
+      }
+      srv->Display();
+    default:;
+      break;
+  }
+  return 0;
+}
+
+static void CliBuildShowTree() {
+  param_t* show_hook = libcli_get_show_hook();
+
+  /* show tcp-server ...*/
+  static param_t tcp_srv;
+  init_param(&tcp_srv, CMD, "tcp-srv", NULL, NULL, INVALID, NULL,
+             "show tcp-srv");
+  libcli_register_param(show_hook, &tcp_srv);
+  {
+    /* show tcp-server <name> */
+    static param_t name;
+    init_param(&name, LEAF, NULL, CliShowTcpSrvHandler, NULL, STRING,
+               "srv-name", "Server name");
+    libcli_register_param(&tcp_srv, &name);
+    set_param_cmd_code(&name, TCP_SRV_SHOW);
+  }
+}
+
+static void CliBuild() {
   CliBuildConfigTree();
   CliBuildShowTree();
 }

@@ -79,6 +79,10 @@ void ConnectionManager::StartThreadInternal() {
     TcpClient* client = new TcpClient(this->server, c_addr.sin_addr.s_addr,
                                       c_addr.sin_port, fd);
 
+    /* assignment_6 */
+    client->srv_ip = this->server->ip;
+    client->srv_port = this->server->port;
+
     if (this->server->connected != nullptr) {
       this->server->connected(this->server, client);
     }

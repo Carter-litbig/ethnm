@@ -57,3 +57,8 @@ cd..
 show tcp-srv s1
 show tcp-srv s1
 show tcp-srv s1
+conf tcp-s s1 /
+cd
+show tcp-srv s1
+conf tcp-s s1 start
+show tcp-s s1

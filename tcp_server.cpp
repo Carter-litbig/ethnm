@@ -44,8 +44,54 @@ void TcpServer::RegisterListener(ClientConnected connected,
 
 void TcpServer::Display() {
   printf("server name: %s\n", this->name.c_str());
+
+  if (!this->IsBitSet(TCP_SERVER_RUNNING)) {
+    printf("tcp server not running\n");
+    return;
+  }
+
   printf("listening on: [%s, %d]\n", network_convert_ip_n_to_p(this->ip, 0),
          this->port);
 
+  printf("Flags :  ");
+
+  if (this->IsBitSet(TCP_SERVER_INITIALIZED)) {
+    printf("I");
+  } else {
+    printf("Un-I");
+  }
+
+  if (this->IsBitSet(TCP_SERVER_RUNNING)) {
+    printf(" R");
+  } else {
+    printf(" Not-R");
+  }
+
+  if (this->IsBitSet(TCP_SERVER_NOT_ACCEPTING_NEW_CONNECTIONS)) {
+    printf(" Not-Acc");
+  } else {
+    printf(" Acc");
+  }
+
+  if (this->IsBitSet(TCP_SERVER_NOT_LISTENING_CLIENTS)) {
+    printf(" Not-L");
+  } else {
+    printf(" L");
+  }
+
+  if (this->IsBitSet(TCP_SERVER_CREATE_MULTI_THREADED_CLIENT)) {
+    printf(" M");
+  } else {
+    printf(" Not-M");
+  }
+
+  printf("\n");
+
   this->client_db_->Display();
 }
+
+void TcpServer::SetBit(uint32_t bit) { this->state |= bit; }
+
+void TcpServer::UnSetBit(uint32_t bit) { this->state &= ~bit; }
+
+bool TcpServer::IsBitSet(uint32_t bit) { return (this->state & bit); }

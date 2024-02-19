@@ -6,9 +6,9 @@
 #include "CommandParser/libcli.h"
 #include "CommandParser/cmdtlv.h"
 
-#define TCP_SRV_CREATE  1
-#define TCP_SRV_START   2
-#define TCP_SRV_SHOW    3
+#define TCP_SRV_CREATE 1
+#define TCP_SRV_START 2
+#define TCP_SRV_SHOW 3
 
 static void PrintClient(const TcpClient* cli) {
   printf("[%s, %d]\n", network_convert_ip_n_to_p(htonl(cli->ip), 0),
@@ -149,6 +149,7 @@ static void CliBuildConfigTree() {
   }
 }
 
+/* assignment_6 */
 static int CliShowTcpSrvHandler(param_t* param, ser_buff_t* s_buf,
                                 op_mode mode) {
   int cmd;
@@ -179,6 +180,7 @@ static int CliShowTcpSrvHandler(param_t* param, ser_buff_t* s_buf,
   return 0;
 }
 
+/* assignment_6 */
 static void CliBuildShowTree() {
   param_t* show_hook = libcli_get_show_hook();
 

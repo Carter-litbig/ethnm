@@ -59,6 +59,11 @@ void ClientService::StartThreadInternal() {
 
   socklen_t addr_len = sizeof(addr);
 
+  /* assignment_7_2 */
+  if (this->server->IsBitSet(TCP_SERVER_NOT_LISTENING_CLIENTS)) {
+    this->server->CopyClients(&this->clients_);
+  }
+
   /* Copy all clients fd */
   this->max_fd = this->GetMaxFd();
   FD_ZERO(&this->backup_fd_set);
@@ -106,6 +111,14 @@ void ClientService::StartThread() {
   pthread_attr_t attr;
   pthread_attr_init(&attr);
   pthread_create(this->thread, &attr, ClientServiceThread, (void *)this);
+
+  /* Note that, even if you implement all steps above correctly, yet your TCP
+   * Server do not reponds to client's data requests , the problem could be
+   * resolved by inserting a sleep(1) as below: */
+
+  // resolved race condition:
+  // https://www.youtube.com/watch?v=lN6psOV5M9o
+  sleep(1);
   printf("service started: ClientServiceThread\n");
 }
 

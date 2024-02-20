@@ -33,7 +33,7 @@ void TcpServer::Start() {
 
 void TcpServer::Stop() {}
 
-void TcpServer::AddClient(TcpClient* client) {
+void TcpServer::AddClient(TcpClient *client) {
   this->client_db_->Update(client);
   this->client_service_->Listen(client);
 }
@@ -124,14 +124,21 @@ void TcpServer::StopClientService() {
 
   printf("SetBit(TCP_SERVER_NOT_LISTENING_CLIENTS)\n");
   this->client_service_->Stop();
-  this->SetBit(TCP_SERVER_NOT_LISTENING_CLIENTS);  
+  this->SetBit(TCP_SERVER_NOT_LISTENING_CLIENTS);
   this->client_service_ = NULL;
 }
 
+/* assignment_7_2 */
 void TcpServer::StartClientService() {
   printf("%s() called\n", __FUNCTION__);
-  if (!this->IsBitSet(TCP_SERVER_NOT_ACCEPTING_NEW_CONNECTIONS)) return;
-  this->UnSetBit(TCP_SERVER_NOT_ACCEPTING_NEW_CONNECTIONS);
-  this->connection_manager_ = new ConnectionManager(this);
-  this->connection_manager_->StartThread();
+  if (!this->IsBitSet(TCP_SERVER_NOT_LISTENING_CLIENTS)) return;
+  this->client_service_ = new ClientService(this);
+  this->client_service_->StartThread();
+  this->UnSetBit(TCP_SERVER_NOT_LISTENING_CLIENTS);
+}
+
+/* assignment_7_2 */
+void TcpServer::CopyClients(std::list<TcpClient *> *list) {
+  printf("%s() called\n", __FUNCTION__);
+  this->client_db_->Copy(list);
 }

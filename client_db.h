@@ -17,6 +17,9 @@ class ClientDB {
   void Update(TcpClient* client);
   void Display();
 
+  /* assignment_7_2 */
+  void Copy(std::list<TcpClient*>* list);
+
  private:
   std::list<TcpClient*> clients_;
 };

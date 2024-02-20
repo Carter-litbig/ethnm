@@ -22,4 +22,7 @@ class TcpClient {
   TcpClient(TcpServer* server, uint32_t ip, uint16_t port, int fd);
 
   void Display();
+  
+  /* assignment_7_2 */
+  void Abort();
 };

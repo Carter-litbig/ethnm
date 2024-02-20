@@ -63,6 +63,9 @@ class TcpServer {
   void StopClientService();
   void StartClientService();
 
+  /* assignment_7_2 */
+  void CopyClients(std::list<TcpClient*>* list);
+
  private:
   ConnectionManager* connection_manager_;
   ClientDB* client_db_;

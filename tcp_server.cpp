@@ -31,7 +31,8 @@ void TcpServer::Start() {
   this->SetBit(TCP_SERVER_RUNNING);
 }
 
-void TcpServer::Stop() {}
+/* assignment_7_2: 아래 참조. 거의 마지막에 구현 */
+// void TcpServer::Stop() {}
 
 void TcpServer::AddClient(TcpClient *client) {
   this->client_db_->Update(client);
@@ -141,4 +142,39 @@ void TcpServer::StartClientService() {
 void TcpServer::CopyClients(std::list<TcpClient *> *list) {
   printf("%s() called\n", __FUNCTION__);
   this->client_db_->Copy(list);
+}
+
+/* assignment_7_2 */
+void TcpServer::Stop() {
+  printf("%s() called\n", __FUNCTION__);
+  
+  if (this->connection_manager_) {
+    this->StopConnectionAcceptance();
+    this->SetBit(TCP_SERVER_NOT_ACCEPTING_NEW_CONNECTIONS);
+  }
+
+  if (this->client_service_) {
+    this->StopClientService();
+    this->SetBit(TCP_SERVER_NOT_LISTENING_CLIENTS);
+  }
+
+  /* Stopping the above two services first ensures that now no thread is alive
+   * which could add tcpclient back into DB */
+  this->client_db_->Purge();
+  delete this->client_db_;
+  this->client_db_ = NULL;
+
+  // in StopConnectionAcceptance(), StopClientService()
+  // this->connection_manager_ = NULL;
+  // this->client_service_ = NULL;
+
+  this->UnSetBit(TCP_SERVER_RUNNING);
+  delete this;
+}
+
+// undefined reference to `TcpServer::~TcpServer()'
+TcpServer::~TcpServer() {
+  assert(!this->connection_manager_);
+  assert(!this->client_db_);
+  assert(!this->client_service_);
 }

@@ -28,3 +28,16 @@ void ClientDB::Copy(std::list<TcpClient *> *list) {
     list->push_back(client);
   }
 }
+
+void ClientDB::Purge() {
+  std::list<TcpClient *>::iterator it;
+  TcpClient *client, *next_client;
+
+  for (it = this->clients_.begin(), client = *it; it != this->clients_.end();
+       client = next_client) {
+    next_client = *(it++);
+
+    this->clients_.remove(client);
+    client->Abort();
+  }
+}

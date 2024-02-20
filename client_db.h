@@ -19,6 +19,7 @@ class ClientDB {
 
   /* assignment_7_2 */
   void Copy(std::list<TcpClient*>* list);
+  void Purge();
 
  private:
   std::list<TcpClient*> clients_;

@@ -145,3 +145,16 @@ show tcp-s s1
 .
 conf tcp-s s1 dis-cli-listen
 conf tcp-s s1 no dis-cli-listen
+conf tcp-s s1 /
+start
+cd
+show tcp-s s1
+.
+conf tcp-srv s1 stop
+show tcp-s s1
+conf tcp-srv s1 start
+conf tcp-s s1
+conf tcp-s s1 start
+show tcp-s s1
+.
+conf tcp-srv s1 stop

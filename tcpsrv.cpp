@@ -9,7 +9,7 @@
 #define TCP_SRV_CREATE 1
 #define TCP_SRV_START 2
 #define TCP_SRV_SHOW 3
-#define TCP_SRV_DISABLE_CONN_ACCEPT 4
+#define TCP_SRV_DIS_CONN_MANAGER 4
 
 static void PrintClient(const TcpClient* cli) {
   printf("[%s, %d]\n", network_convert_ip_n_to_p(htonl(cli->ip), 0),
@@ -101,7 +101,7 @@ int CliCfgTcpSrvHandler(param_t* param, ser_buff_t* s_buf, op_mode mode) {
       // printf("start invoked\n");
       break;
 
-    case TCP_SRV_DISABLE_CONN_ACCEPT:
+    case TCP_SRV_DIS_CONN_MANAGER:
       srv = CliLookupServer(std::string(srv_name));
       if (!srv) {
         printf("error: tcp server do not exist\n");
@@ -145,12 +145,12 @@ static void CliBuildConfigTree() {
       set_param_cmd_code(&srv_name, TCP_SRV_CREATE);
       {
         /* config tcp-srv <name> [no] disable-connection-accept */
-        static param_t dis_conn_accept;
-        init_param(&dis_conn_accept, CMD, "disable-conn-accept",
+        static param_t dis_connmgr;
+        init_param(&dis_connmgr, CMD, "dis-connmgr",
                    CliCfgTcpSrvHandler, 0, INVALID, 0,
                    "Connection accept settings");
-        libcli_register_param(&srv_name, &dis_conn_accept);
-        set_param_cmd_code(&dis_conn_accept, TCP_SRV_DISABLE_CONN_ACCEPT);
+        libcli_register_param(&srv_name, &dis_connmgr);
+        set_param_cmd_code(&dis_connmgr, TCP_SRV_DIS_CONN_MANAGER);
       }
       {
         /* config tcp-srv <ip> ... */

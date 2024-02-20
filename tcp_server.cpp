@@ -101,9 +101,19 @@ void TcpServer::UnSetBit(uint32_t bit) { this->state &= ~bit; }
 bool TcpServer::IsBitSet(uint32_t bit) { return (this->state & bit); }
 
 void TcpServer::StopConnectionAcceptance() {
-  printf("%s() called", __FUNCTION__);
+  printf("%s() called\n", __FUNCTION__);
+  if (this->IsBitSet(TCP_SERVER_NOT_ACCEPTING_NEW_CONNECTIONS)) return;
+
+  printf("SetBit(TCP_SERVER_NOT_ACCEPTING_NEW_CONNECTIONS)\n");
+  this->SetBit(TCP_SERVER_NOT_ACCEPTING_NEW_CONNECTIONS);
+  this->connection_manager_->Stop();
+  this->connection_manager_ = NULL;
 }
 
 void TcpServer::StartConnectionAcceptance() {
-  printf("%s() called", __FUNCTION__);
+  printf("%s() called\n", __FUNCTION__);
+  if (!this->IsBitSet(TCP_SERVER_NOT_ACCEPTING_NEW_CONNECTIONS)) return;
+  this->UnSetBit(TCP_SERVER_NOT_ACCEPTING_NEW_CONNECTIONS);
+  this->connection_manager_ = new ConnectionManager(this);
+  this->connection_manager_->StartThread();
 }

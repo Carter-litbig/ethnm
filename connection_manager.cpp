@@ -121,9 +121,13 @@ void ConnectionManager::StartThread() {
 
 void ConnectionManager::StopThread() {
   if (!this->thread) return;
+
+  printf("pthread_cancel\n");
   pthread_cancel(*this->thread);
 
   /* Wait until the thread is cancelled successfully */
+  pthread_join(*this->thread, NULL);
+  
   free(this->thread);
   this->thread = NULL;
 }

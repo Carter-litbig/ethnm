@@ -22,6 +22,8 @@ class ClientService {
   void CopyClientFd(fd_set*);
   void AddClient(TcpClient* client);
 
+  void Stop();
+
  private:
   int max_fd;
   fd_set active_fd_set;

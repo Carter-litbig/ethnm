@@ -9,7 +9,8 @@
 #define TCP_SRV_CREATE 1
 #define TCP_SRV_START 2
 #define TCP_SRV_SHOW 3
-#define TCP_SRV_DIS_CONN_MANAGER 4
+#define TCP_SRV_DIS_NEW_CONNECTION 4
+#define TCP_SRV_DIS_CLIENT_LISTEN 5
 
 static void PrintClient(const TcpClient* cli) {
   printf("[%s, %d]\n", network_convert_ip_n_to_p(htonl(cli->ip), 0),
@@ -101,7 +102,7 @@ int CliCfgTcpSrvHandler(param_t* param, ser_buff_t* s_buf, op_mode mode) {
       // printf("start invoked\n");
       break;
 
-    case TCP_SRV_DIS_CONN_MANAGER:
+    case TCP_SRV_DIS_NEW_CONNECTION:
       srv = CliLookupServer(std::string(srv_name));
       if (!srv) {
         printf("error: tcp server do not exist\n");
@@ -118,6 +119,24 @@ int CliCfgTcpSrvHandler(param_t* param, ser_buff_t* s_buf, op_mode mode) {
           break;
       }
       break;
+
+    case TCP_SRV_DIS_CLIENT_LISTEN:
+      srv = CliLookupServer(std::string(srv_name));
+      if (!srv) {
+        printf("error: tcp server do not exist\n");
+        return -1;
+      }
+
+      switch (mode) {
+        case CONFIG_ENABLE:
+          srv->StopClientService();
+          break;
+
+        case CONFIG_DISABLE:
+          srv->StartClientService();
+          break;
+      }
+      break;      
 
     default:
       break;
@@ -145,13 +164,22 @@ static void CliBuildConfigTree() {
       set_param_cmd_code(&srv_name, TCP_SRV_CREATE);
       {
         /* config tcp-srv <name> [no] disable-connection-accept */
-        static param_t dis_connmgr;
-        init_param(&dis_connmgr, CMD, "dis-connmgr",
+        static param_t dis_new_conn;
+        init_param(&dis_new_conn, CMD, "dis-new-conn",
                    CliCfgTcpSrvHandler, 0, INVALID, 0,
                    "Connection accept settings");
-        libcli_register_param(&srv_name, &dis_connmgr);
-        set_param_cmd_code(&dis_connmgr, TCP_SRV_DIS_CONN_MANAGER);
+        libcli_register_param(&srv_name, &dis_new_conn);
+        set_param_cmd_code(&dis_new_conn, TCP_SRV_DIS_NEW_CONNECTION);
       }
+      {
+        /* config tcp-srv <name> [no] disable-client-listen */
+        static param_t dis_cli_listen;
+        init_param(&dis_cli_listen, CMD, "dis-cli-listen",
+                   CliCfgTcpSrvHandler, 0, INVALID, 0,
+                   "LIstening settings");
+        libcli_register_param(&srv_name, &dis_cli_listen);
+        set_param_cmd_code(&dis_cli_listen, TCP_SRV_DIS_CLIENT_LISTEN);
+      }      
       {
         /* config tcp-srv <ip> ... */
         static param_t ip;

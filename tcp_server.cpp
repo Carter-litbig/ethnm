@@ -117,3 +117,21 @@ void TcpServer::StartConnectionAcceptance() {
   this->connection_manager_ = new ConnectionManager(this);
   this->connection_manager_->StartThread();
 }
+
+void TcpServer::StopClientService() {
+  printf("%s() called\n", __FUNCTION__);
+  if (this->IsBitSet(TCP_SERVER_NOT_LISTENING_CLIENTS)) return;
+
+  printf("SetBit(TCP_SERVER_NOT_LISTENING_CLIENTS)\n");
+  this->client_service_->Stop();
+  this->SetBit(TCP_SERVER_NOT_LISTENING_CLIENTS);  
+  this->client_service_ = NULL;
+}
+
+void TcpServer::StartClientService() {
+  printf("%s() called\n", __FUNCTION__);
+  if (!this->IsBitSet(TCP_SERVER_NOT_ACCEPTING_NEW_CONNECTIONS)) return;
+  this->UnSetBit(TCP_SERVER_NOT_ACCEPTING_NEW_CONNECTIONS);
+  this->connection_manager_ = new ConnectionManager(this);
+  this->connection_manager_->StartThread();
+}

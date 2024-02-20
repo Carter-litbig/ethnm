@@ -11,6 +11,8 @@
 #include "tcp_client.h"
 #include "msg_delimiter.h"
 
+#include <assert.h>
+
 unsigned char data[kBufferSize];
 
 ClientService::ClientService(TcpServer *server) {
@@ -136,4 +138,27 @@ void ClientService::Listen(TcpClient *client) {
 
   this->thread = (pthread_t *)calloc(1, sizeof(pthread_t));
   this->StartThread();
+}
+
+void ClientService::Stop() {
+  /* 1. Cancel client service thread */
+  this->StopThread();
+
+  /* 2. Cleanup client db 'of client service' */
+  std::list<TcpClient *>::iterator it;
+  TcpClient *client, *next_client;
+
+  /* this function assumes that client service thread is already cancelled,
+   * hence no need to lock anything */
+  assert(this->thread == NULL);
+
+  for (it = this->clients_.begin(), client = *it; it != this->clients_.end();
+       client = next_client) {
+    next_client = *(it++);
+    this->clients_.remove(client);
+    /* Note that these clients are still present in client db */
+  }
+
+  /* 3. Delete client service altogether */
+  delete this;
 }

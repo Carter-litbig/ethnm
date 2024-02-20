@@ -60,6 +60,9 @@ class TcpServer {
   void StopConnectionAcceptance();
   void StartConnectionAcceptance();
 
+  void StopClientService();
+  void StartClientService();
+
  private:
   ConnectionManager* connection_manager_;
   ClientDB* client_db_;

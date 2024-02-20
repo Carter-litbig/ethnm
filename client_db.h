@@ -2,6 +2,7 @@
 // clidb
 
 #include <list>
+#include <pthread.h>
 
 class TcpClient;
 class TcpServer;
@@ -23,4 +24,5 @@ class ClientDB {
 
  private:
   std::list<TcpClient*> clients_;
+  pthread_rwlock_t rwlock;
 };

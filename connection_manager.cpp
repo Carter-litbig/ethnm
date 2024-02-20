@@ -89,7 +89,9 @@ void ConnectionManager::StartThreadInternal() {
       this->server->connected(this->server, client);
     }
 
-    client->msg_delimiter = new MsgDelimiterFixed(27);
+    /* Message delimiter */
+    // client->msg_delimiter = new MsgDelimiterFixed(27);
+    client->msg_delimiter = NULL;
 
     /* Update Client DB */
     this->server->AddClient(client);

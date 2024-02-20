@@ -131,3 +131,10 @@ conf tcp-s s1 start
 .
 conf tcp-s s1 dis-cli-listen
 show tcp-s s1
+conf tcp-s s1 /
+start
+cd
+show tcp-s s1
+.
+conf tcp-s s1 dis-cli-listen
+show tcp-s s1

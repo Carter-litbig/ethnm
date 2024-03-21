@@ -7,7 +7,7 @@
 
 #include "network_utils.h"
 
-#include "tcp_client.h"
+#include "udp_client.h"
 #include "msg_delimiter.h"
 #include "msg_delimiter_fixed.h"
 
@@ -104,6 +104,58 @@ void ConnectionManager::StartThreadInternal() {
   }
 }
 
+void ConnectionManager::UdpManager() {
+  int master_sock_udp_fd;
+  int sent_recv_bytes;
+  int addr_len;
+
+  struct sockaddr_in server_addr;
+  struct sockaddr_in client_addr;
+  struct sockaddr_in multicast_addr;
+
+  if ((master_sock_udp_fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1) {
+    this->error_break("socket");
+  }
+
+  memset((char *)&server_addr, 0, sizeof(server_addr));
+
+  server_addr.sin_family = AF_INET;
+  server_addr.sin_port = htons(SERVER_PORT);
+  server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+  addr_len = sizeof(client_addr);
+
+  if (bind(master_sock_udp_fd, (struct sockaddr *)&server_addr,
+           sizeof(struct sockaddr)) == -1) {
+    this->error_break("socket");
+  }
+
+  while (1)
+  {
+    printf("Waiting for data\n");
+    fflush(stdout);
+
+    if (sent_recv_bytes = recvfrom(master_sock_udp_fd, data_buffer, DATA_LEN, 0, (struct sockaddr*)&client_addr, &addr_len) == -1)
+    {
+      this->error_break("recvfrom()");
+    }
+
+    printf("Received packet from %s:%d\n", inet_ntoa(client_addr.sin_addr),
+           ntohs(client_addr.sin_port));
+    printf("Data: %s\n", data_buffer);
+
+    if (sendto(master_sock_udp_fd, data_buffer, sent_recv_bytes, 0, (struct sockaddr*)&client_addr, addr_len) == -1)
+    {
+      this->error_break("sendto()");
+    }
+    else
+    {
+      printf("echo cmpl : %s\n", data_buffer);
+    }
+  }
+
+  close(master_sock_udp_fd);
+}
+
 static void* ConnectionManagerThread(void* arg) {
   ConnectionManager* cm = (ConnectionManager*)arg;
 
@@ -144,4 +196,9 @@ void ConnectionManager::Stop() {
 
   /* 3. Delete this instance of connmgr */
   delete this;
+}
+
+void ConnectionManager::error_break(char *s) {
+  perror(s);
+  exit(1);
 }

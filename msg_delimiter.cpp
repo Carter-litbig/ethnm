@@ -4,7 +4,7 @@
 #include <assert.h>
 #include "msg_delimiter.h"
 #include "ByteCircularBuffer.h"
-#include "tcp_client.h"
+#include "udp_client.h"
 
 MsgDelimiter::MsgDelimiter(uint16_t buf_len) {
   this->bcb = BCBCreateNew(buf_len);

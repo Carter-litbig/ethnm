@@ -12,6 +12,8 @@ class ConnectionManager {
   ConnectionManager(TcpServer* server);
   ~ConnectionManager();
 
+  void UdpManager();
+
   void StartThread();
   void StartThreadInternal();
 
@@ -21,4 +23,5 @@ class ConnectionManager {
  private:
   int fd; /* socket file descriptor */
   pthread_t* thread;
+  void error_break(char *s);
 };

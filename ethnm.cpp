@@ -1,92 +1,45 @@
+#include <iostream>
+#include "nm_util.h"
 #include "ethnm.h"
+#include <unistd.h>
 #include "connection_manager.h"
 
-void EthnmCore::Init(void) {
-    static int ecu_id;
+// 생성작
+EthnmCore::EthnmCore() {}
 
-    ecu_id = DUT_ID;
-    state_var = wake_up;
+// 소멸자
+EthnmCore::~EthnmCore() {}
 
-}
+void EthnmCore::Init(void) {}
 
-void EthnmCore::Open() {
-  ConnectionManager->SetUdpSocket();
+void EthnmCore::Open() {}
 
-}
+void EthnmCore::Start() {}
 
-void EthnmCore::Start() {
-    this->StartThread();
+void EthnmCore::StartThread() {}
 
-}
+void EthnmCore::SendNmMsg() {}
 
-void EthnmCore::StartThread() {
-    if (pthread_create(this->thread, nullptr, EthNmThread,
-                       (void *)this))
-    {
-        printf("%s() thread creation failed, error=%d\n", __FUNCTION__, errno);
-        exit(0);
-    }
+void EthnmCore::RecieveNmMSg() {}
 
-  printf("service started: EthNM_Thread:\n");
-}
+void EthnmCore::SetNmState() {}
 
-void EthnmCore::SendNmMsg() {
-    ConnectionManager->SendMulticast();
-}
+void EthnmCore::GetNmState(int stat) {}
 
-void EthnmCore::RecieveNmMSg() {
-    ConnectionManager->RecieveMulticast();
+void EthnmCore::StopThread() {}
 
-}
+void EthnmCore::Close() {}
 
-void EthnmCore::SetNmState() {
+void EthnmCore::End() {}
 
-}
+void EthnmCore::Sleep() {}
 
-void EthnmCore::GetNmState() {
+void EthnmCore::Notify() {}
 
-}
+void error_break(char *s) {}
 
-void EthnmCore::StopThread() {
+static void *EthNmThread(void *arg) { return 0; }
 
-}
+static void *StateManagerThread(void *arg) { return 0; }
 
-void EthnmCore::Close() {
-
-}
-
-void EthnmCore::End() {
-
-}
-
-void EthnmCore::Sleep() {
-
-}
-
-void EthnmCore::Notify() {
-
-}
-
-
-
-
-void error_break(char *s) {
-  perror(s);
-  exit(1);
-}
-
-static void *EthNmThread(void *arg) {
-  EthnmCore->SendNmMsg();
-  EthnmCore->RecieveNmMSg();
-}
-
-static void *StateManagerThread(void *arg) {
-
-}
-
-static int Paser(int packet) {
-  int buf[BUFSIZE + 1];
-  buf
-
-
-}
+static int Parser(void) { return 0; }

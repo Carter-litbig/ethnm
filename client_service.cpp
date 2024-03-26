@@ -8,7 +8,7 @@
 
 #include "client_service.h"
 #include "tcp_server.h"
-#include "udp_client.h"
+#include "tcp_client.h"
 #include "msg_delimiter.h"
 
 #include <assert.h>

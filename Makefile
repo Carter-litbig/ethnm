@@ -1,21 +1,21 @@
 CC=g++
 CFLAGS=-g
-TARGET:tcpsrv.exe
-LIBS=-lpthread -L CommandParser -lcli -lrt
+TARGET:nmsrv
+LIBS=-lpthread
 OBJS=client_db.o \
 	 		client_service.o \
 			connection_manager.o  \
 			tcp_server.o \
 			network_utils.o \
 			tcp_client.o \
+			ethnm.o \
 			ByteCircularBuffer.o \
 			msg_delimiter.o \
 			msg_delimiter_fixed.o \
 			msg_delimiter_var.o \
-			CommandParser/libcli.a
 
-tcpsrv.exe:tcpsrv.o ${OBJS}
-	${CC} ${CFLAGS} ${OBJS} tcpsrv.o -o tcpsrv.exe ${LIBS}
+nmsrv:nmsrv.o ${OBJS}
+	${CC} ${CFLAGS} ${OBJS} nmsrv.o -o nmsrv ${LIBS}
 	
 client_db.o:client_db.cpp
 	${CC} ${CFLAGS} -c client_db.cpp -o client_db.o
@@ -35,6 +35,9 @@ network_utils.o:network_utils.cpp
 tcp_client.o:tcp_client.cpp
 	${CC} ${CFLAGS} -c tcp_client.cpp -o tcp_client.o
 
+ethnm.o:ethnm.cpp
+	${CC} ${CFLAGS} -c ethnm.cpp -o ethnm.o	
+
 ByteCircularBuffer.o:ByteCircularBuffer.cpp
 	${CC} ${CFLAGS} -c ByteCircularBuffer.cpp -o ByteCircularBuffer.o	
 
@@ -45,12 +48,8 @@ msg_delimiter_fixed.o:msg_delimiter_fixed.cpp
 	${CC} ${CFLAGS} -c msg_delimiter_fixed.cpp -o msg_delimiter_fixed.o		
 
 msg_delimiter_var.o:msg_delimiter_var.cpp
-	${CC} ${CFLAGS} -c msg_delimiter_var.cpp -o msg_delimiter_var.o	
-
-CommandParser/libcli.a:
-	(cd CommandParser; make)
+	${CC} ${CFLAGS} -c msg_delimiter_var.cpp -o msg_delimiter_var.o
 
 clean:
 	rm -f *.o
 	rm -f *exe
-	(cd CommandParser; make clean)

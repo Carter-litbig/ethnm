@@ -4,7 +4,7 @@
 #include <assert.h>
 #include "msg_delimiter.h"
 #include "ByteCircularBuffer.h"
-#include "udp_client.h"
+#include "tcp_client.h"
 
 MsgDelimiter::MsgDelimiter(uint16_t buf_len) {
   this->bcb = BCBCreateNew(buf_len);
@@ -33,7 +33,8 @@ void MsgDelimiter::Destroy() {
   }
 }
 
-void MsgDelimiter::Process(TcpClient* client, unsigned char* msg, uint16_t size) {
+void MsgDelimiter::Process(TcpClient* client, unsigned char* msg,
+                           uint16_t size) {
   assert(BCBWrite(client->msg_delimiter->bcb, msg, size));
 
   if (!this->IsFlushable()) return;

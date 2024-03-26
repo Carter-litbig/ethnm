@@ -7,7 +7,7 @@ class MsgDelimiter;
 
 const int kBufferSize = 1024;
 
-class UdpClient {
+class TcpClient {
   public:
   uint32_t ip;
   uint16_t port;
@@ -19,7 +19,7 @@ class UdpClient {
   TcpServer* server;
   MsgDelimiter* msg_delimiter;
 
-  UdpClient(TcpServer* server, uint32_t ip, uint16_t port, int fd);
+  TcpClient(TcpServer* server, uint32_t ip, uint16_t port, int fd);
 
   void Display();
   

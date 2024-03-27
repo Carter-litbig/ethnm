@@ -9,6 +9,16 @@
 
 #include "tcp_client.h"
 
+<<<<<<< HEAD
+=======
+/* assignment_7_1 */
+#define TCP_SERVER_INITIALIZED (1)
+#define TCP_SERVER_RUNNING (2)
+#define TCP_SERVER_NOT_ACCEPTING_NEW_CONNECTIONS (4)
+#define TCP_SERVER_NOT_LISTENING_CLIENTS (8)
+#define TCP_SERVER_CREATE_MULTI_THREADED_CLIENT (16)
+
+>>>>>>> 7aae719 (add deleted file)
 /* Notify for application */
 #if 0
 typedef void (*ClientConnected)(const TcpServer*, const TcpClient);
@@ -45,9 +55,29 @@ class TcpServer {
   void RegisterListener(ClientConnected, ClientDisconnected, ClientReceived);
 
   void Display();
+<<<<<<< HEAD
+=======
+
+  void SetBit(uint32_t bit);
+  void UnSetBit(uint32_t bit);
+  bool IsBitSet(uint32_t bit);
+
+  void StopConnectionAcceptance();
+  void StartConnectionAcceptance();
+
+  void StopClientService();
+  void StartClientService();
+
+  /* assignment_7_2 */
+  void CopyClients(std::list<TcpClient*>* list);
+>>>>>>> 7aae719 (add deleted file)
 
  private:
   ConnectionManager* connection_manager_;
   ClientDB* client_db_;
   ClientService* client_service_;
+<<<<<<< HEAD
+=======
+  uint32_t state;
+>>>>>>> 7aae719 (add deleted file)
 };

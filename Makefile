@@ -1,6 +1,10 @@
 CC=g++
 CFLAGS=-g
+<<<<<<< HEAD
 TARGET:tcpsrv.exe
+=======
+TARGET:nmsrv
+>>>>>>> 7aae719 (add deleted file)
 LIBS=-lpthread
 OBJS=client_db.o \
 	 		client_service.o \
@@ -8,11 +12,22 @@ OBJS=client_db.o \
 			tcp_server.o \
 			network_utils.o \
 			tcp_client.o \
+<<<<<<< HEAD
 			ByteCircularBuffer.o \
 			msg_handler.o
 
 tcpsrv.exe:tcpsrv.o ${OBJS}
 	${CC} ${CFLAGS} ${OBJS} tcpsrv.o -o tcpsrv.exe ${LIBS}
+=======
+			ethnm.o \
+			ByteCircularBuffer.o \
+			msg_delimiter.o \
+			msg_delimiter_fixed.o \
+			msg_delimiter_var.o \
+
+nmsrv:nmsrv.o ${OBJS}
+	${CC} ${CFLAGS} ${OBJS} nmsrv.o -o nmsrv ${LIBS}
+>>>>>>> 7aae719 (add deleted file)
 	
 client_db.o:client_db.cpp
 	${CC} ${CFLAGS} -c client_db.cpp -o client_db.o
@@ -32,12 +47,29 @@ network_utils.o:network_utils.cpp
 tcp_client.o:tcp_client.cpp
 	${CC} ${CFLAGS} -c tcp_client.cpp -o tcp_client.o
 
+<<<<<<< HEAD
 ByteCircularBuffer.o:ByteCircularBuffer.cpp
 	${CC} ${CFLAGS} -c ByteCircularBuffer.cpp -o ByteCircularBuffer.o	
 
 msg_handler.o:msg_handler.cpp
 	${CC} ${CFLAGS} -c msg_handler.cpp -o msg_handler.o	
+=======
+ethnm.o:ethnm.cpp
+	${CC} ${CFLAGS} -c ethnm.cpp -o ethnm.o	
+
+ByteCircularBuffer.o:ByteCircularBuffer.cpp
+	${CC} ${CFLAGS} -c ByteCircularBuffer.cpp -o ByteCircularBuffer.o	
+
+msg_delimiter.o:msg_delimiter.cpp
+	${CC} ${CFLAGS} -c msg_delimiter.cpp -o msg_delimiter.o	
+
+msg_delimiter_fixed.o:msg_delimiter_fixed.cpp
+	${CC} ${CFLAGS} -c msg_delimiter_fixed.cpp -o msg_delimiter_fixed.o		
+
+msg_delimiter_var.o:msg_delimiter_var.cpp
+	${CC} ${CFLAGS} -c msg_delimiter_var.cpp -o msg_delimiter_var.o
+>>>>>>> 7aae719 (add deleted file)
 
 clean:
 	rm -f *.o
-	rm -f *exe
+	rm -f nmsrv

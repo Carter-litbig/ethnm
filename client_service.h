@@ -21,6 +21,11 @@ class ClientService {
   int GetMaxFd();
   void CopyClientFd(fd_set*);
   void AddClient(TcpClient* client);
+<<<<<<< HEAD
+=======
+
+  void Stop();
+>>>>>>> 7aae719 (add deleted file)
 
  private:
   int max_fd;

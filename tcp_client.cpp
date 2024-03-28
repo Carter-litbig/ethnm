@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "tcp_client.h"
 #include <stdio.h>
 #include <arpa/inet.h>
@@ -15,6 +16,8 @@ void TcpClient::Display() {
   printf("tcp client: [%s , %d]\n", network_convert_ip_n_to_p(htonl(this->ip), 0),
          (this->port));
 =======
+=======
+>>>>>>> 7aae7196fac60570b89d7991884599e1ec7b55c9
 #include "tcp_client.h"
 #include <stdio.h>
 #include <arpa/inet.h>
@@ -50,5 +53,8 @@ void TcpClient::Abort() {
   }
 
   delete this;
+<<<<<<< HEAD
 >>>>>>> 7aae719 (add deleted file)
+=======
+>>>>>>> 7aae7196fac60570b89d7991884599e1ec7b55c9
 }

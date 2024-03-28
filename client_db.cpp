@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "client_db.h"
 #include "tcp_server.h"
 
@@ -20,6 +21,8 @@ void ClientDB::Display() {
   }
 }
 =======
+=======
+>>>>>>> 7aae7196fac60570b89d7991884599e1ec7b55c9
 #include "client_db.h"
 #include "tcp_server.h"
 
@@ -76,4 +79,7 @@ void ClientDB::Purge() {
   }
   pthread_rwlock_unlock(&this->rwlock);
 }
+<<<<<<< HEAD
 >>>>>>> 7aae719 (add deleted file)
+=======
+>>>>>>> 7aae7196fac60570b89d7991884599e1ec7b55c9

@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "connection_manager.h"
 #include "tcp_server.h"
 
@@ -110,6 +111,8 @@ void ConnectionManager::StartThread() {
   printf("service started: ConnectionManagerThread:\n");
 }
 =======
+=======
+>>>>>>> 7aae7196fac60570b89d7991884599e1ec7b55c9
 #include <iostream>
 #include <memory.h>
 #include <sys/socket.h>
@@ -368,5 +371,9 @@ void ConnectionManager::Stop() {
 void ConnectionManager::error_break(const char *s) {
   perror(s);
   exit(1);
+<<<<<<< HEAD
 }
 >>>>>>> 7aae719 (add deleted file)
+=======
+}
+>>>>>>> 7aae7196fac60570b89d7991884599e1ec7b55c9

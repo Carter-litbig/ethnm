@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/socket.h>
@@ -141,6 +142,8 @@ void ClientService::Listen(TcpClient *client) {
   this->StartThread();
 }
 =======
+=======
+>>>>>>> 7aae7196fac60570b89d7991884599e1ec7b55c9
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/socket.h>
@@ -318,4 +321,7 @@ void ClientService::Stop() {
   /* 3. Delete client service altogether */
   delete this;
 }
+<<<<<<< HEAD
 >>>>>>> 7aae719 (add deleted file)
+=======
+>>>>>>> 7aae7196fac60570b89d7991884599e1ec7b55c9

@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include <stdio.h>
 #include <assert.h>
 #include "tcp_server.h"
@@ -50,6 +51,8 @@ void TcpServer::Display() {
 
   this->client_db_->Display();
 =======
+=======
+>>>>>>> 7aae7196fac60570b89d7991884599e1ec7b55c9
 #include <stdio.h>
 #include <assert.h>
 #include "tcp_server.h"
@@ -229,5 +232,8 @@ TcpServer::~TcpServer() {
   assert(!this->connection_manager_);
   assert(!this->client_db_);
   assert(!this->client_service_);
+<<<<<<< HEAD
 >>>>>>> 7aae719 (add deleted file)
+=======
+>>>>>>> 7aae7196fac60570b89d7991884599e1ec7b55c9
 }

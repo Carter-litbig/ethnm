@@ -10,7 +10,10 @@
 #include "tcp_client.h"
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> 7aae7196fac60570b89d7991884599e1ec7b55c9
 /* assignment_7_1 */
 #define TCP_SERVER_INITIALIZED (1)
 #define TCP_SERVER_RUNNING (2)
@@ -18,7 +21,10 @@
 #define TCP_SERVER_NOT_LISTENING_CLIENTS (8)
 #define TCP_SERVER_CREATE_MULTI_THREADED_CLIENT (16)
 
+<<<<<<< HEAD
 >>>>>>> 7aae719 (add deleted file)
+=======
+>>>>>>> 7aae7196fac60570b89d7991884599e1ec7b55c9
 /* Notify for application */
 #if 0
 typedef void (*ClientConnected)(const TcpServer*, const TcpClient);
@@ -56,7 +62,10 @@ class TcpServer {
 
   void Display();
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> 7aae7196fac60570b89d7991884599e1ec7b55c9
 
   void SetBit(uint32_t bit);
   void UnSetBit(uint32_t bit);
@@ -70,14 +79,21 @@ class TcpServer {
 
   /* assignment_7_2 */
   void CopyClients(std::list<TcpClient*>* list);
+<<<<<<< HEAD
 >>>>>>> 7aae719 (add deleted file)
+=======
+>>>>>>> 7aae7196fac60570b89d7991884599e1ec7b55c9
 
  private:
   ConnectionManager* connection_manager_;
   ClientDB* client_db_;
   ClientService* client_service_;
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
   uint32_t state;
 >>>>>>> 7aae719 (add deleted file)
+=======
+  uint32_t state;
+>>>>>>> 7aae7196fac60570b89d7991884599e1ec7b55c9
 };

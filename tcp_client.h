@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 #pragma once
 // tcpcli
 #include <stdint.h>
@@ -21,6 +22,8 @@ class TcpClient {
 
   void Display();
 =======
+=======
+>>>>>>> 7aae7196fac60570b89d7991884599e1ec7b55c9
 #pragma once
 // tcpcli
 #include <stdint.h>
@@ -48,5 +51,8 @@ class TcpClient {
   
   /* assignment_7_2 */
   void Abort();
+<<<<<<< HEAD
 >>>>>>> 7aae719 (add deleted file)
+=======
+>>>>>>> 7aae7196fac60570b89d7991884599e1ec7b55c9
 };

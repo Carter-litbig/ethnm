@@ -52,4 +52,4 @@ msg_delimiter_var.o:msg_delimiter_var.cpp
 
 clean:
 	rm -f *.o
-	rm -f *exe
+	rm -f nmsrv

@@ -147,7 +147,7 @@ void TcpServer::CopyClients(std::list<TcpClient *> *list) {
 /* assignment_7_2 */
 void TcpServer::Stop() {
   printf("%s() called\n", __FUNCTION__);
-  
+
   if (this->connection_manager_) {
     this->StopConnectionAcceptance();
     this->SetBit(TCP_SERVER_NOT_ACCEPTING_NEW_CONNECTIONS);

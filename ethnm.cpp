@@ -1,45 +1,243 @@
 #include <iostream>
+#include <unistd.h>
+#include <sys/stat.h>  //mkfifo
+#include <cstring>     //std::strlen
+#include <fcntl.h>     //open
+
 #include "nm_util.h"
 #include "ethnm.h"
-#include <unistd.h>
 #include "connection_manager.h"
 
-// 생성작
-EthnmCore::EthnmCore() {}
+// 생성자
+EthnmCore::EthnmCore(int state_var_, int pre_state_var_)
+    : state_var(state_var_),
+      pre_state_var(pre_state_var_),
+      nm_state(init_state),
+      send_msg_running(true) {
+  connection_manager_ = new ConnectionManager(this);
+
+  memset(ethnm_packet, 0, BUFSIZE);
+
+  this->tid_network = (pthread_t *)calloc(1, sizeof(pthread_t));
+  this->tid_statemanager = (pthread_t *)calloc(1, sizeof(pthread_t));
+}
 
 // 소멸자
-EthnmCore::~EthnmCore() {}
+EthnmCore::~EthnmCore() { Stop(); }
 
-void EthnmCore::Init(void) {}
+void EthnmCore::Init() {
+  static int ecu_id;
+  nm_state_t nm_stat;
+  ecu_id = DUT_ID;
 
-void EthnmCore::Open() {}
+  // this->Start();
+}
 
-void EthnmCore::Start() {}
+/*************************************************************
+ static function
+**************************************************************/
+static void *EthNmThread(void *arg) {
+  EthnmCore *nmcore = (EthnmCore *)arg;
+  while (true) {
+    if (nmcore->state_var == repeat_message || nmcore->state_var == normal_op ||
+        nmcore->state_var == ready_sleep) {
+      nmcore->RecieveNmMSg();
+    } else {
+      // exit(0);
+    }
+  }
+}
 
-void EthnmCore::StartThread() {}
+static void *StateManagerThread(void *arg) {
+  EthnmCore *nmcore = (EthnmCore *)arg;
+  while (true) {
+    nmcore->SetNmState();
+    nmcore->SendNmMsg();
+  }
+}
 
-void EthnmCore::SendNmMsg() {}
+int EthnmCore::Parser(uint8_t *packet, uint32_t packet_len) {
+  int par_data;
+  uint16_t service_id = 0;
+  uint8_t service_primitive_id = 0;
+  pthread_mutex_t mutex;
 
-void EthnmCore::RecieveNmMSg() {}
+  if (packet_len > 0) {
+    if (packet_len == 8u && packet[0] == 0x7F) {
+      state_var = repeat_message;
+    } else if (packet_len == 20u) {
+      std::memcpy(&service_id, &packet[0], sizeof(uint16_t));
+      service_primitive_id = packet[3];
 
-void EthnmCore::SetNmState() {}
+      if (service_id == 0x0105u && service_primitive_id == 0x12u) {
+        state_var = repeat_message;
+      } else if (service_id == 0x0105u && service_primitive_id == 0x51u) {
+        state_var = sleep_bus;
+      }
+    }
+  }
+  return 0;
+}
 
-void EthnmCore::GetNmState(int stat) {}
+void EthnmCore::Open() { connection_manager_->SetUdpSocket(); }
 
-void EthnmCore::StopThread() {}
+void EthnmCore::Start() {
+  Open();
+  StartThread();
+}
 
-void EthnmCore::Close() {}
+void EthnmCore::StartThread() {
+  if (pthread_create(this->tid_network, nullptr, EthNmThread, (void *)this) <
+      0) {
+    // printf("%s() thread creation failed, error=%d\n", __FUNCTION__, errno);
+    error_break("thread create");
+  }
 
-void EthnmCore::End() {}
+  // printf("service started: EthNM_Thread\n");
+
+  if (pthread_create(tid_statemanager, nullptr, StateManagerThread,
+                     (void *)this) < 0) {
+    // printf("%s() thread creation failed, error=%d\n", __FUNCTION__, errno);
+    error_break("thread create");
+  }
+  // printf("service started: State_Manager\n");
+
+  pthread_join(*this->tid_network, NULL);
+  pthread_join(*this->tid_statemanager, NULL);
+}
+
+void EthnmCore::SendNmMsg() { connection_manager_->SendMulticast(); }
+
+void EthnmCore::RecieveNmMSg() { connection_manager_->RecieveMulticast(); }
+
+void EthnmCore::SetNmState() {
+  if (pre_state_var != state_var) {
+    pre_state_var = state_var;
+    // printf("state : %d, %d\n", state_var, this->state_var);
+
+    if (state_var == wake_up) {
+      std::cout << "Wake up done\n" << std::endl;
+    } else if (state_var == repeat_message) {
+      std::cout << "Go repeat message\n" << std::endl;
+      send_msg_running = true;
+    } else if (state_var == normal_op) {
+      std::cout << "Go normal operation\n" << std::endl;
+    } else if (state_var == sleep_bus) {
+      std::cout << "Go sleep\n" << std::endl;
+      send_msg_running = false;
+      Notify();
+
+    } else if (state_var == ready_sleep) {
+      std::cout << "Go ready_sleep\n" << std::endl;
+      send_msg_running = false;
+    } else if (state_var == error_state) {
+      std::cout << "State Errror!\n" << std::endl;
+    }
+  }
+}
+
+void EthnmCore::GetNmState(int stat) {
+  switch (stat) {
+    case init_state:
+      state_var = init_state;
+      break;
+    case wake_up:
+      state_var = wake_up;
+      break;
+    case preapre_sleep:
+      state_var = preapre_sleep;
+      break;
+    case repeat_message:
+      state_var = repeat_message;
+      break;
+    case normal_op:
+      state_var = normal_op;
+      break;
+    case ready_sleep:
+      state_var = ready_sleep;
+      break;
+    case sleep_bus:
+      state_var = sleep_bus;
+      break;
+    case error_state:
+      state_var = error_state;
+      break;
+    default:
+      break;
+  }
+}
+
+void EthnmCore::Close() { connection_manager_->Stop(); }
+
+void EthnmCore::End() {
+  state_var = init_state;
+  pre_state_var = init_state;
+}
 
 void EthnmCore::Sleep() {}
 
-void EthnmCore::Notify() {}
+void EthnmCore::Notify() {
+  const char *fifo_path = "/tmp/nmpipe";
+  const char *message = "Sleep command!";
 
-void error_break(char *s) {}
+  if (access(fifo_path, F_OK) == -1) {
+    std::string command = "mkfifo ";
+    command += fifo_path;
 
-static void *EthNmThread(void *arg) { return 0; }
+    // 네임드 파이프 생성
+    int status = system(command.c_str());
 
-static void *StateManagerThread(void *arg) { return 0; }
+    if (status != 0) {
+      std::cerr << "Error: Unable to create /tmp/nmpipe" << std::endl;
+    }
+    std::cout << "/tmp/nmpipe has been created successfully" << std::endl;
+  } else {
+    std::cout << "/tmp/nmpipe already exists" << std::endl;
+  }
 
-static int Parser(void) { return 0; }
+  mkfifo(fifo_path, 0666);
+
+  // 파이프 열기 (쓰기 전용)
+  int fd = open(fifo_path, O_WRONLY);
+  if (fd == -1) {
+    perror("open fail!\n");
+  }
+
+  // 메시지 전송
+  if (write(fd, message, std::strlen(message)) != std::strlen(message)) {
+    perror("write fail!\n");
+    close(fd);
+  }
+  // 파이프 닫기
+  close(fd);
+}
+
+void EthnmCore::error_break(const char *s) {
+  perror(s);
+  exit(1);
+}
+
+void EthnmCore::StopThread() {
+  printf("StopThread\n");
+  if ((!this->tid_network) || (!this->tid_statemanager)) return;
+
+  pthread_cancel(*this->tid_network);
+  pthread_cancel(*this->tid_statemanager);
+
+  /* Wait until the thread is cancelled successfully */
+  pthread_join(*this->tid_network, NULL);
+  pthread_join(*this->tid_statemanager, NULL);
+
+  free(this->tid_network);
+  free(this->tid_statemanager);
+
+  this->tid_network = NULL;
+  this->tid_statemanager = NULL;
+}
+void EthnmCore::Stop() {
+  this->StopThread();
+
+  connection_manager_->Stop();
+  delete connection_manager_;
+  delete this;
+}

@@ -14,9 +14,10 @@
 
 #define BUFSIZE 512
 #define TTL_DEFAULT 1
+#define DEFAULT_OPTION 1
 
 typedef struct Packet {
-  char data[BUFSIZE];
+  unsigned char data[BUFSIZE];
   int data_len;
   uint32_t data_size;
   uint32_t data_seq;

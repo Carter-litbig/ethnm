@@ -8,7 +8,7 @@ class MsgDelimiter;
 const int kBufferSize = 1024;
 
 class TcpClient {
-  public:
+ public:
   uint32_t ip;
   uint16_t port;
   int fd;
@@ -22,7 +22,7 @@ class TcpClient {
   TcpClient(TcpServer* server, uint32_t ip, uint16_t port, int fd);
 
   void Display();
-  
+
   /* assignment_7_2 */
   void Abort();
 };

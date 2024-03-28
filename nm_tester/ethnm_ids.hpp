@@ -1,0 +1,14 @@
+#define MULTICAST_ADDR "239.0.127.255"
+#define PORT 13800
+#define BUFSIZE 512
+
+#define MSG_NONE 0X00u
+#define MSG_NM 0x10u
+#define MSG_COMMAND 0x20u
+
+#define NM_TEST_NONE 0x00u
+#define NM_TEST_MSG_REPEAT 0x01u
+#define NM_TEST_MSG_STOP 0x02u
+#define NM_TEST_DUT_START 0x03u
+#define NM_TEST_DUT_RELEASE 0x04u
+#define NM_TEST_QUIT 0x05u

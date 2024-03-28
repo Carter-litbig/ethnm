@@ -9,26 +9,24 @@
 #include "connection_manager.h"
 
 // 생성자
-EthnmCore::EthnmCore(int state_var_, int pre_state_var_)
+Ethnm::Ethnm(int state_var_, int pre_state_var_)
     : state_var(state_var_),
-      pre_state_var(pre_state_var_),
-      nm_state(init_state),
+      pre_state_var_(pre_state_var_),
+      nm_state_(init_state),
       send_msg_running(true) {
   connection_manager_ = new ConnectionManager(this);
 
   memset(ethnm_packet, 0, BUFSIZE);
 
-  this->tid_network = (pthread_t *)calloc(1, sizeof(pthread_t));
-  this->tid_statemanager = (pthread_t *)calloc(1, sizeof(pthread_t));
+  this->tid_network_ = (pthread_t *)calloc(1, sizeof(pthread_t));
+  this->tid_statemanager_ = (pthread_t *)calloc(1, sizeof(pthread_t));
 }
 
 // 소멸자
-EthnmCore::~EthnmCore() { Stop(); }
+Ethnm::~Ethnm() { Stop(); }
 
-void EthnmCore::Init() {
-  static int ecu_id;
+void Ethnm::Init() {
   nm_state_t nm_stat;
-  ecu_id = DUT_ID;
 
   // this->Start();
 }
@@ -37,11 +35,11 @@ void EthnmCore::Init() {
  static function
 **************************************************************/
 static void *EthNmThread(void *arg) {
-  EthnmCore *nmcore = (EthnmCore *)arg;
+  Ethnm *ethnm = (Ethnm *)arg;
   while (true) {
-    if (nmcore->state_var == repeat_message || nmcore->state_var == normal_op ||
-        nmcore->state_var == ready_sleep) {
-      nmcore->RecieveNmMSg();
+    if (ethnm->state_var == repeat_message || ethnm->state_var == normal_op ||
+        ethnm->state_var == ready_sleep) {
+      ethnm->RecieveNmMSg();
     } else {
       // exit(0);
     }
@@ -49,14 +47,14 @@ static void *EthNmThread(void *arg) {
 }
 
 static void *StateManagerThread(void *arg) {
-  EthnmCore *nmcore = (EthnmCore *)arg;
+  Ethnm *ethnm = (Ethnm *)arg;
   while (true) {
-    nmcore->SetNmState();
-    nmcore->SendNmMsg();
+    ethnm->SetNmState();
+    ethnm->SendNmMsg();
   }
 }
 
-int EthnmCore::Parser(uint8_t *packet, uint32_t packet_len) {
+int Ethnm::Parser(uint8_t *packet, uint32_t packet_len) {
   int par_data;
   uint16_t service_id = 0;
   uint8_t service_primitive_id = 0;
@@ -79,41 +77,35 @@ int EthnmCore::Parser(uint8_t *packet, uint32_t packet_len) {
   return 0;
 }
 
-void EthnmCore::Open() { connection_manager_->SetUdpSocket(); }
+void Ethnm::Open() { connection_manager_->SetUdpSocket(); }
 
-void EthnmCore::Start() {
+void Ethnm::Start() {
   Open();
   StartThread();
 }
 
-void EthnmCore::StartThread() {
-  if (pthread_create(this->tid_network, nullptr, EthNmThread, (void *)this) <
+void Ethnm::StartThread() {
+  if (pthread_create(this->tid_network_, nullptr, EthNmThread, (void *)this) <
       0) {
-    // printf("%s() thread creation failed, error=%d\n", __FUNCTION__, errno);
-    error_break("thread create");
+    Error_break("thread create");
   }
 
-  // printf("service started: EthNM_Thread\n");
-
-  if (pthread_create(tid_statemanager, nullptr, StateManagerThread,
+  if (pthread_create(tid_statemanager_, nullptr, StateManagerThread,
                      (void *)this) < 0) {
-    // printf("%s() thread creation failed, error=%d\n", __FUNCTION__, errno);
-    error_break("thread create");
+    Error_break("thread create");
   }
-  // printf("service started: State_Manager\n");
 
-  pthread_join(*this->tid_network, NULL);
-  pthread_join(*this->tid_statemanager, NULL);
+  pthread_join(*this->tid_network_, NULL);
+  pthread_join(*this->tid_statemanager_, NULL);
 }
 
-void EthnmCore::SendNmMsg() { connection_manager_->SendMulticast(); }
+void Ethnm::SendNmMsg() { connection_manager_->SendMulticast(); }
 
-void EthnmCore::RecieveNmMSg() { connection_manager_->RecieveMulticast(); }
+void Ethnm::RecieveNmMSg() { connection_manager_->RecieveMulticast(); }
 
-void EthnmCore::SetNmState() {
-  if (pre_state_var != state_var) {
-    pre_state_var = state_var;
-    // printf("state : %d, %d\n", state_var, this->state_var);
+void Ethnm::SetNmState() {
+  if (pre_state_var_ != state_var) {
+    pre_state_var_ = state_var;
 
     if (state_var == wake_up) {
       std::cout << "Wake up done\n" << std::endl;
@@ -136,7 +128,7 @@ void EthnmCore::SetNmState() {
   }
 }
 
-void EthnmCore::GetNmState(int stat) {
+void Ethnm::GetNmState(int stat) {
   switch (stat) {
     case init_state:
       state_var = init_state;
@@ -167,16 +159,16 @@ void EthnmCore::GetNmState(int stat) {
   }
 }
 
-void EthnmCore::Close() { connection_manager_->Stop(); }
+void Ethnm::Close() { connection_manager_->Stop(); }
 
-void EthnmCore::End() {
+void Ethnm::End() {
   state_var = init_state;
-  pre_state_var = init_state;
+  pre_state_var_ = init_state;
 }
 
-void EthnmCore::Sleep() {}
+void Ethnm::Sleep() {}
 
-void EthnmCore::Notify() {
+void Ethnm::Notify() {
   const char *fifo_path = "/tmp/nmpipe";
   const char *message = "Sleep command!";
 
@@ -200,41 +192,40 @@ void EthnmCore::Notify() {
   // 파이프 열기 (쓰기 전용)
   int fd = open(fifo_path, O_WRONLY);
   if (fd == -1) {
-    perror("open fail!\n");
+    Error_break("open fail!\n");
   }
 
   // 메시지 전송
   if (write(fd, message, std::strlen(message)) != std::strlen(message)) {
-    perror("write fail!\n");
+    Error_break("write fail!\n");
     close(fd);
   }
   // 파이프 닫기
   close(fd);
 }
 
-void EthnmCore::error_break(const char *s) {
+void Ethnm::Error_break(const char *s) {
   perror(s);
   exit(1);
 }
 
-void EthnmCore::StopThread() {
-  printf("StopThread\n");
-  if ((!this->tid_network) || (!this->tid_statemanager)) return;
+void Ethnm::StopThread() {
+  if ((!this->tid_network_) || (!this->tid_statemanager_)) return;
 
-  pthread_cancel(*this->tid_network);
-  pthread_cancel(*this->tid_statemanager);
+  pthread_cancel(*this->tid_network_);
+  pthread_cancel(*this->tid_statemanager_);
 
   /* Wait until the thread is cancelled successfully */
-  pthread_join(*this->tid_network, NULL);
-  pthread_join(*this->tid_statemanager, NULL);
+  pthread_join(*this->tid_network_, NULL);
+  pthread_join(*this->tid_statemanager_, NULL);
 
-  free(this->tid_network);
-  free(this->tid_statemanager);
+  free(this->tid_network_);
+  free(this->tid_statemanager_);
 
-  this->tid_network = NULL;
-  this->tid_statemanager = NULL;
+  this->tid_network_ = NULL;
+  this->tid_statemanager_ = NULL;
 }
-void EthnmCore::Stop() {
+void Ethnm::Stop() {
   this->StopThread();
 
   connection_manager_->Stop();

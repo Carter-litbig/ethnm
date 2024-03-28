@@ -16,6 +16,10 @@
 #define TTL_DEFAULT 1
 #define DEFAULT_OPTION 1
 
+#define WAIT_SLEEP_TIME 5
+#define WAIT_SLEEP_INTERVAL 10
+
+
 typedef struct Packet {
   unsigned char data[BUFSIZE];
   int data_len;

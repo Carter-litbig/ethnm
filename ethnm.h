@@ -14,13 +14,13 @@ typedef enum {
 
 class ConnectionManager;
 
-class EthnmCore {
+class Ethnm {
  public:
   int state_var;
-  bool send_msg_running;
   uint8_t ethnm_packet[BUFSIZE];
-  EthnmCore(int state_var_, int pre_state_var_);
-  ~EthnmCore();
+  bool send_msg_running;
+  Ethnm(int state_var_, int pre_state_var_);
+  ~Ethnm();
   void Init();
   void Open();
   void Start();
@@ -35,14 +35,14 @@ class EthnmCore {
   void StopThread();
   void Stop();
   void Notify();
-  void error_break(const char* s);
+  void Error_break(const char* s);
   int Parser(uint8_t* packet, uint32_t packet_len);
 
  private:
   // 2024-03-26 ispark: connection_manager_ add.
   ConnectionManager* connection_manager_;
-  int pre_state_var;
-  nm_state_t nm_state;
-  pthread_t* tid_network;
-  pthread_t* tid_statemanager;
+  int pre_state_var_;
+  nm_state_t nm_state_;
+  pthread_t* tid_network_;
+  pthread_t* tid_statemanager_;
 };

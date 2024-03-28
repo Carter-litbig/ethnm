@@ -20,18 +20,18 @@
 ConnectionManager::ConnectionManager(TcpServer *server) {
   this->server = server;
 
-  this->fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-  if (this->fd < 0) {
+  this->fd_ = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+  if (this->fd_ < 0) {
     printf("error: could not Create accept fd\n");
     exit(0);
   }
 
-  this->thread = (pthread_t *)calloc(1, sizeof(pthread_t));
+  this->thread_ = (pthread_t *)calloc(1, sizeof(pthread_t));
 }
 
 // 2024-03-25 ispark: ConnectionManager add
-ConnectionManager::ConnectionManager(EthnmCore *nmcore) {
-  this->nmcore = nmcore;
+ConnectionManager::ConnectionManager(Ethnm *ethnm) {
+  this->ethnm = ethnm;
 }
 
 ConnectionManager::~ConnectionManager() {}
@@ -45,20 +45,20 @@ void ConnectionManager::StartThreadInternal() {
   s_addr.sin_port = htons(this->server->port);
   s_addr.sin_addr.s_addr = htonl(this->server->ip);
 
-  if (setsockopt(this->fd, SOL_SOCKET, SO_REUSEADDR, (char *)&opt,
+  if (setsockopt(this->fd_, SOL_SOCKET, SO_REUSEADDR, (char *)&opt,
                  sizeof(opt)) < 0) {
     printf("setsockopt failed\n");
     exit(0);
   }
 
-  if (setsockopt(this->fd, SOL_SOCKET, SO_REUSEPORT, (char *)&opt,
+  if (setsockopt(this->fd_, SOL_SOCKET, SO_REUSEPORT, (char *)&opt,
                  sizeof(opt)) < 0) {
     printf("setsockopt failed\n");
     exit(0);
   }
 
   /* Bind the socket */
-  if (bind(this->fd, (struct sockaddr *)&s_addr, sizeof(struct sockaddr)) ==
+  if (bind(this->fd_, (struct sockaddr *)&s_addr, sizeof(struct sockaddr)) ==
       -1) {
     printf("error: connmgr socket bind failed[%s(0x%x), %d], error=%d",
            network_convert_ip_n_to_p(this->server->ip, 0), this->server->ip,
@@ -66,7 +66,7 @@ void ConnectionManager::StartThreadInternal() {
     exit(0);
   }
 
-  if (listen(this->fd, 5) < 0) {
+  if (listen(this->fd_, 5) < 0) {
     printf("Listen failed\n");
     exit(0);
   }
@@ -80,7 +80,7 @@ void ConnectionManager::StartThreadInternal() {
    */
   while (true) {
     /* Invoke accept() to acept new connections */
-    fd = accept(this->fd, (struct sockaddr *)&c_addr, &c_addr_len);
+    fd = accept(this->fd_, (struct sockaddr *)&c_addr, &c_addr_len);
 
     if (fd < 0) {
       printf("error in accepting new connections\n");
@@ -125,25 +125,25 @@ void ConnectionManager::SetUdpSocket() {
   struct sockaddr_in multicast_addr;
   struct ip_mreq mreq;
 
-  if ((master_sock_udp = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) {
-    this->error_break("set UDP(reveive)");
+  if ((reciever_sock_udp = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) {
+    this->Error_break("set UDP(reveive)");
   }
 
   //----------------------------------------------------------------------
   // 메시지 수신을 위한 UDP 소켓 생성
   sender_sock_udp = socket(AF_INET, SOCK_DGRAM, /*IPPROTO_UDP*/ 0);
   if (sender_sock_udp < 0) {
-    this->error_break("set UDP(sender)");
+    this->Error_break("set UDP(sender)");
   }
 
   if (setsockopt(sender_sock_udp, IPPROTO_IP, IP_MULTICAST_TTL, (void *)&ttl,
                  sizeof(ttl)) < 0) {
-    this->error_break("ttl");
+    this->Error_break("ttl");
   }
   // 주소 재사용 설정
-  if (setsockopt(master_sock_udp, SOL_SOCKET, SO_REUSEADDR, (void *)&option,
+  if (setsockopt(reciever_sock_udp, SOL_SOCKET, SO_REUSEADDR, (void *)&option,
                  sizeof(option)) < 0) {
-    this->error_break("Failed to set reuseaddr!");
+    this->Error_break("Failed to set reuseaddr!");
   }
   //----------------------------------------------------------------------
 
@@ -152,17 +152,17 @@ void ConnectionManager::SetUdpSocket() {
   multicast_addr.sin_port = htons(MULTICAST_PORT);
   multicast_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-  if (bind(master_sock_udp, (struct sockaddr *)&multicast_addr,
+  if (bind(reciever_sock_udp, (struct sockaddr *)&multicast_addr,
            sizeof(struct sockaddr)) < 0) {
-    this->error_break("socket");
+    this->Error_break("socket");
   }
 
   mreq.imr_multiaddr.s_addr = inet_addr(MULTICAST_ADDR);
   mreq.imr_interface.s_addr = htonl(INADDR_ANY);
 
-  if (setsockopt(master_sock_udp, IPPROTO_IP, IP_ADD_MEMBERSHIP, (void *)&mreq,
+  if (setsockopt(reciever_sock_udp, IPPROTO_IP, IP_ADD_MEMBERSHIP, (void *)&mreq,
                  sizeof(mreq)) < 0) {
-    this->error_break("join muticast group");
+    this->Error_break("join muticast group");
   }
 }
 
@@ -176,10 +176,10 @@ void ConnectionManager::RecieveMulticast() {
   while (1) {
     // std::cout << "[received data]\n" << std::endl;
     std::memset(&rcvpkt, 0, sizeof(rcvpkt));
-    rcvpkt.data_len = recvfrom(master_sock_udp, rcvpkt.data, BUFSIZE, 0, NULL,
+    rcvpkt.data_len = recvfrom(reciever_sock_udp, rcvpkt.data, BUFSIZE, 0, NULL,
                                0);  // 브로드캐스트 된 데이터를 수신
     if (rcvpkt.data_len < 0) {
-      error_break("multicast receive");
+      Error_break("multicast receive");
     } else {
       rcvpkt.data[rcvpkt.data_len] = '\0';
       // sleep check
@@ -187,9 +187,9 @@ void ConnectionManager::RecieveMulticast() {
           (nm_msg_check == false)) {
         T_WaitBusSleep++;
         // sleep count: 5s
-        if (T_WaitBusSleep > 5) {
-          this->nmcore->state_var = ready_sleep;  // send msg stop
-          this->nmcore->send_msg_running = false;
+        if (T_WaitBusSleep > WAIT_SLEEP_TIME) {
+          this->ethnm->state_var = ready_sleep;  // send msg stop
+          this->ethnm->send_msg_running = false;
           T_WaitBusSleep = 0;
           nm_msg_check = true;
         }
@@ -197,7 +197,7 @@ void ConnectionManager::RecieveMulticast() {
         nm_msg_check = false;
         T_WaitBusSleep = 0;
       }
-      this->nmcore->Parser((uint8_t *)rcvpkt.data, rcvpkt.data_len);
+      this->ethnm->Parser((uint8_t *)rcvpkt.data, rcvpkt.data_len);
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
@@ -211,11 +211,11 @@ void ConnectionManager::SendMulticast() {
   send_addr.sin_addr.s_addr = inet_addr(MULTICAST_ADDR);
   send_addr.sin_port = htons(MULTICAST_PORT);
 
-  while (this->nmcore->send_msg_running) {
-    if (nmcore->state_var == repeat_message || nmcore->state_var == normal_op) {
+  while (this->ethnm->send_msg_running) {
+    if (ethnm->state_var == repeat_message || ethnm->state_var == normal_op) {
       if (sendto(sender_sock_udp, msg, sizeof(msg), 0, (sockaddr *)&send_addr,
                  sizeof(send_addr)) < 0) {
-        this->error_break("send multicast msg");
+        this->Error_break("send multicast msg");
       }
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
@@ -230,31 +230,29 @@ static void *ConnectionManagerThread(void *arg) {
 }
 
 void ConnectionManager::StartThread() {
-  /* Start a thread */
-  if (pthread_create(this->thread, nullptr, ConnectionManagerThread,
+  /* Start a thread_ */
+  if (pthread_create(this->thread_, nullptr, ConnectionManagerThread,
                      (void *)this)) {
-    printf("%s() thread creation failed, error=%d\n", __FUNCTION__, errno);
+    printf("%s() thread_ creation failed, error=%d\n", __FUNCTION__, errno);
     exit(0);
   }
-
-  printf("service started: ConnectionManagerThread:\n");
 }
 
 void ConnectionManager::StopThread() {
-  if (!this->thread) return;
+  if (!this->thread_) return;
 
   printf("pthread_cancel\n");
-  pthread_cancel(*this->thread);
+  pthread_cancel(*this->thread_);
 
-  /* Wait until the thread is cancelled successfully */
-  pthread_join(*this->thread, NULL);
+  /* Wait until the thread_ is cancelled successfully */
+  pthread_join(*this->thread_, NULL);
 
-  free(this->thread);
-  this->thread = NULL;
+  free(this->thread_);
+  this->thread_ = NULL;
 }
 
 void ConnectionManager::Stop() {
-  // /* 1. Stop the connmgr thread if it is running */
+  // /* 1. Stop the connmgr thread_ if it is running */
   // this->StopThread();
 
   // /* 2. Release the resource (accept_fd) */
@@ -263,11 +261,11 @@ void ConnectionManager::Stop() {
 
   // /* 3. Delete this instance of connmgr */
   // delete this;
-  close(master_sock_udp);
+  close(reciever_sock_udp);
   close(sender_sock_udp);
 }
 
-void ConnectionManager::error_break(const char *s) {
+void ConnectionManager::Error_break(const char *s) {
   perror(s);
   exit(1);
 }

@@ -25,6 +25,6 @@ class EthnmTester {
   bool sender_running_;
   bool receiver_running_;
   bool nm_message_check_;
-  std::thread receiver_;
-  std::thread sender_;
+  std::thread receiver_thread_;
+  std::thread sender_thread_;
 };

@@ -19,35 +19,11 @@ EthnmTester::EthnmTester(uint32_t _message_number)
       thread_running_(true),
       sender_running_(false),
       receiver_running_(false),
-      nm_message_check_(false) {}
+      nm_message_check_(false),
+      sender_thread_(std::bind(&EthnmTester::SenderThread, this)),
+      receiver_thread_(std::bind(&EthnmTester::ReceiverThread, this)) {}
 
-EthnmTester::~EthnmTester() {
-#if 1
-  if (std::this_thread::get_id() != receiver_.get_id()) {
-    if (receiver_.joinable()) {
-      // std::cout << "receiver_ thread join" << std::endl;
-      receiver_.join();
-    }
-  } else {
-    // std::cout << "receiver_ thread detach" << std::endl;
-    receiver_.detach();
-  }
-  printf("::EthnmTester\n");
-  if (std::this_thread::get_id() != sender_.get_id()) {
-    if (sender_.joinable()) {
-      // std::cout << "sender_ thread join" << std::endl;
-      sender_.join();
-    }
-  } else {
-    // std::cout << "sender_ thread detach" << std::endl;
-    sender_.detach();
-  }
-#else
-  std::cout << "::~EthnmTester\n" << std::endl;
-  sender_.detach();
-  receiver_.detach();
-#endif
-}
+EthnmTester::~EthnmTester() {}
 bool EthnmTester::Init() {
   if (Open() == false) {
     std::cout << "UDP socket open failure!" << std::endl;
@@ -228,9 +204,15 @@ PROMPT_USER:
 
   // 잘못된 입력을 받았을 경우
   if (std::cin.fail()) {
-    std::cout << "Wrong Number. Retry!" << std::endl;  // 에러 메시지 출력
-    std::cin.clear();            // 오류스트림을 초기화
-    std::cin.ignore(256, '\n');  // 입력버퍼를 비움
+    if (std::cin.eof()) {
+      goto PROMPT_EXIT;
+    }
+    // 에러 메시지 출력
+    std::cout << "Wrong Number. Retry!" << std::endl;
+    // 오류스트림을 초기화
+    std::cin.clear();
+    // 입력버퍼를 비움
+    std::cin.ignore(256, '\n');
     goto PROMPT_USER;
   }
 
@@ -267,7 +249,9 @@ PROMPT_USER:
   goto PROMPT_USER;
 
 PROMPT_EXIT:
-  Stop();
+  if (thread_running_ == true) {
+    Stop();
+  }
   return;
 }
 
@@ -294,7 +278,7 @@ void EthnmTester::DecodeMsg(std::uint8_t* msg, sockaddr_in addr,
     std::memcpy(&service_id, &msg[0], sizeof(uint16_t));
     service_primitive_id = msg[3];
     if (service_id == 0x0105u && service_primitive_id == 0x12u) {
-      std::cout << "NM message repeat start!\n" std::endl;
+      std::cout << "NM message repeat start!\n" << std::endl;
     } else if (service_id == 0x0105u && service_primitive_id == 0x51u) {
       std::cout << "NM_STATE sleep\n" << std::endl;
     }
@@ -314,25 +298,38 @@ void EthnmTester::Start() {
   sender_running_ = false;
   receiver_running_ = true;
 
-  sender_ = std::thread(&EthnmTester::SenderThread, this);
-  receiver_ = std::thread(&EthnmTester::ReceiverThread, this);
-
   CommandProcess();
 }
 
 void EthnmTester::Stop() {
-  this->sender_running_ = false;
-  this->receiver_running_ = false;
-  this->thread_running_ = false;
+  sender_running_ = false;
+  receiver_running_ = false;
+  thread_running_ = false;
+
+  // socket close
   Close();
-  exit(0);
+
+  if (std::this_thread::get_id() != sender_thread_.get_id()) {
+    if (sender_thread_.joinable()) {
+      sender_thread_.join();
+    }
+  } else {
+    sender_thread_.detach();
+  }
+  if (std::this_thread::get_id() != receiver_thread_.get_id()) {
+    if (receiver_thread_.joinable()) {
+      receiver_thread_.join();
+    }
+  } else {
+    receiver_thread_.detach();
+  }
 }
 
 EthnmTester* tester_ptr(nullptr);
 void handle_signal(int _signal) {
   if (tester_ptr != nullptr && (_signal == SIGINT || _signal == SIGTERM)) {
     tester_ptr->Stop();
-    std::cout << "handle_signal exit!" << std::endl;
+    std::cout << "\nhandle_signal exit!\n" << std::endl;
   }
 }
 

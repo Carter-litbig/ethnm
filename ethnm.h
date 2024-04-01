@@ -1,25 +1,25 @@
 #include <pthread.h>
+
 #include "nm_util.h"
 
-typedef enum {
-  init_state,
-  wake_up,
-  preapre_sleep,
-  repeat_message,
-  normal_op,
-  ready_sleep,
-  sleep_bus,
-  error_state
-} nm_state_t;
+using enum {
+  INIT_STATE,
+  WAKE_UP,
+  PREPARE_SLEEP,
+  REPEAT_MESSAGE,
+  NORMAL_OPERATION,
+  READY_SLEEP,
+  SLEEP_BUS,
+  ERROR_STATE
+} nm_state_e;
 
 class ConnectionManager;
 
 class Ethnm {
  public:
   int state_var;
-  uint8_t ethnm_packet[BUFSIZE];
   bool send_msg_running;
-  Ethnm(int state_var_, int pre_state_var_);
+  Ethnm(int s, int ps);
   ~Ethnm();
   void Init();
   void Open();
@@ -30,19 +30,18 @@ class Ethnm {
   void StartThread();
   void SendNmMsg();
   void RecieveNmMSg();
-  void GetNmState(int stat);
   void Sleep();
   void StopThread();
   void Stop();
   void Notify();
-  void Error_break(const char* s);
-  int Parser(uint8_t* packet, uint32_t packet_len);
+  void ErrorBreak(const char* s);
+  int Parser(uint8_t* p, uint32_t len);
 
  private:
   // 2024-03-26 ispark: connection_manager_ add.
   ConnectionManager* connection_manager_;
   int pre_state_var_;
-  nm_state_t nm_state_;
+  nm_state_e nm_state_;
   pthread_t* tid_network_;
   pthread_t* tid_statemanager_;
 };

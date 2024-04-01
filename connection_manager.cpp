@@ -126,24 +126,24 @@ void ConnectionManager::SetUdpSocket() {
   struct ip_mreq mreq;
 
   if ((reciever_sock_udp = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) {
-    this->Error_break("set UDP(reveive)");
+    this->ErrorBreak("set UDP(reveive)");
   }
 
   //----------------------------------------------------------------------
   // 메시지 수신을 위한 UDP 소켓 생성
   sender_sock_udp = socket(AF_INET, SOCK_DGRAM, /*IPPROTO_UDP*/ 0);
   if (sender_sock_udp < 0) {
-    this->Error_break("set UDP(sender)");
+    this->ErrorBreak("set UDP(sender)");
   }
 
   if (setsockopt(sender_sock_udp, IPPROTO_IP, IP_MULTICAST_TTL, (void *)&ttl,
                  sizeof(ttl)) < 0) {
-    this->Error_break("ttl");
+    this->ErrorBreak("ttl");
   }
   // 주소 재사용 설정
   if (setsockopt(reciever_sock_udp, SOL_SOCKET, SO_REUSEADDR, (void *)&option,
                  sizeof(option)) < 0) {
-    this->Error_break("Failed to set reuseaddr!");
+    this->ErrorBreak("Failed to set reuseaddr!");
   }
   //----------------------------------------------------------------------
 
@@ -154,7 +154,7 @@ void ConnectionManager::SetUdpSocket() {
 
   if (bind(reciever_sock_udp, (struct sockaddr *)&multicast_addr,
            sizeof(struct sockaddr)) < 0) {
-    this->Error_break("socket");
+    this->ErrorBreak("socket");
   }
 
   mreq.imr_multiaddr.s_addr = inet_addr(MULTICAST_ADDR);
@@ -162,7 +162,7 @@ void ConnectionManager::SetUdpSocket() {
 
   if (setsockopt(reciever_sock_udp, IPPROTO_IP, IP_ADD_MEMBERSHIP, (void *)&mreq,
                  sizeof(mreq)) < 0) {
-    this->Error_break("join muticast group");
+    this->ErrorBreak("join muticast group");
   }
 }
 
@@ -179,7 +179,7 @@ void ConnectionManager::RecieveMulticast() {
     rcvpkt.data_len = recvfrom(reciever_sock_udp, rcvpkt.data, BUFSIZE, 0, NULL,
                                0);  // 브로드캐스트 된 데이터를 수신
     if (rcvpkt.data_len < 0) {
-      Error_break("multicast receive");
+      ErrorBreak("multicast receive");
     } else {
       rcvpkt.data[rcvpkt.data_len] = '\0';
       // sleep check
@@ -188,7 +188,7 @@ void ConnectionManager::RecieveMulticast() {
         T_WaitBusSleep++;
         // sleep count: 5s
         if (T_WaitBusSleep > WAIT_SLEEP_TIME) {
-          this->ethnm->state_var = ready_sleep;  // send msg stop
+          this->ethnm->state_var = READY_SLEEP;  // send msg stop
           this->ethnm->send_msg_running = false;
           T_WaitBusSleep = 0;
           nm_msg_check = true;
@@ -212,10 +212,10 @@ void ConnectionManager::SendMulticast() {
   send_addr.sin_port = htons(MULTICAST_PORT);
 
   while (this->ethnm->send_msg_running) {
-    if (ethnm->state_var == repeat_message || ethnm->state_var == normal_op) {
+    if (ethnm->state_var == REPEAT_MESSAGE || ethnm->state_var == NORMAL_OPERATION) {
       if (sendto(sender_sock_udp, msg, sizeof(msg), 0, (sockaddr *)&send_addr,
                  sizeof(send_addr)) < 0) {
-        this->Error_break("send multicast msg");
+        this->ErrorBreak("send multicast msg");
       }
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
@@ -265,7 +265,7 @@ void ConnectionManager::Stop() {
   close(sender_sock_udp);
 }
 
-void ConnectionManager::Error_break(const char *s) {
+void ConnectionManager::ErrorBreak(const char *s) {
   perror(s);
   exit(1);
 }

@@ -13,7 +13,7 @@ void handle_signal(int _signal) {
 
 int main(int argc, char** argv) {
   std::string state("state");
-  uint32_t nm_state = init_state;
+  uint32_t nm_state = INIT_STATE;
 
   int i = 1;
   while (i < argc) {
@@ -23,12 +23,12 @@ int main(int argc, char** argv) {
     i++;
   }
 
-  // Ethnm* ethnm = new Ethnm(nm_state, init_state);
+  // Ethnm* ethnm = new Ethnm(nm_state, INIT_STATE);
 
   // uint32_t nm_state = 0;
   // TcpServer* srv1 = new TcpServer("127.0.0.1", 40000, "tcp server1");
   // printf("state : %d\n", nm_state);
-  Ethnm* ethnm = new Ethnm(nm_state, init_state);
+  Ethnm* ethnm = new Ethnm(nm_state, INIT_STATE);
   ethnm_ptr = ethnm;
 
   signal(SIGINT, handle_signal);

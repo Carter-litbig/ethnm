@@ -1,7 +1,5 @@
-#pragma once
-// connmgr
-
 #include <pthread.h>
+
 #include "nm_util.h"
 
 class TcpServer;
@@ -38,5 +36,5 @@ class ConnectionManager {
   int fd_; /* socket file descriptor */
 
   pthread_t* thread_;
-  void Error_break(const char* s);
+  void ErrorBreak(const char* s);
 };

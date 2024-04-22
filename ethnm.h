@@ -28,20 +28,20 @@ class Ethnm {
   void NmStateNotify();
   void StartThread();
   void SendNmMsg();
-  void RecieveNmMSg();
+  // void RecieveNmMSg();
   void Sleep();
   void StopThread();
   void Stop();
   void SleepNotify();
   void ErrorBreak(const char* s);
-  int Parser(uint8_t* p, uint32_t len);
+  static void Parser(uint8_t* p, uint32_t len, void* context);
 
  private:
   // 2024-03-26 ispark: connection_manager_ add.
   int state_var_;
   int pre_state_var_;
   ConnectionManager* connection_manager_;
-  pthread_t* tid_network_;
+  // pthread_t* tid_network_;
   pthread_t* tid_statemanager_;
   pthread_rwlock_t rwlock_;
 };

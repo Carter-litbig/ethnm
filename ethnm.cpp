@@ -13,59 +13,43 @@ Ethnm::Ethnm(int s, int ps) : state_var_(s), pre_state_var_(ps) {
   connection_manager_ = new ConnectionManager(this);
   pthread_rwlock_init(&this->rwlock_, NULL);
 
-  this->tid_network_ = (pthread_t *)calloc(1, sizeof(pthread_t));
+  // this->tid_network_ = (pthread_t *)calloc(1, sizeof(pthread_t));
   this->tid_statemanager_ = (pthread_t *)calloc(1, sizeof(pthread_t));
 }
 
 // 소멸자
 Ethnm::~Ethnm() {}
 
-void Ethnm::Init() {
-  // this->Start();
-}
+void Ethnm::Init() { connection_manager_->RegisterUdpPacket(Parser, this); }
 
 /*************************************************************
  static function
 **************************************************************/
-static void *EthNmThread(void *arg) {
-  Ethnm *ethnm = (Ethnm *)arg;
-  int state_mask = (REPEAT_MESSAGE || NORMAL_OPERATION || READY_SLEEP);
-  while (true) {
-    if ((ethnm->GetNmState() & state_mask)) {
-      ethnm->RecieveNmMSg();
-    } else {
-      // exit(0);
-    }
-  }
-}
-
 static void *StateManagerThread(void *arg) {
   Ethnm *ethnm = (Ethnm *)arg;
-  while (true) {
-    ethnm->NmStateNotify();
-    ethnm->SendNmMsg();
-  }
+  ethnm->SendNmMsg();
+  return 0;
 }
 
-int Ethnm::Parser(uint8_t *pkt, uint32_t len) {
+void Ethnm::Parser(uint8_t *pkt, uint32_t len, void *context) {
   uint16_t service_id = 0;
   uint8_t service_primitive_id = 0;
+  Ethnm *ethnm = (Ethnm *)context;
 
   if (len > 0) {
     if (len == 8u && pkt[0] == 0x7F) {
-      SetNmState(REPEAT_MESSAGE);
+      ethnm->SetNmState(REPEAT_MESSAGE);
     } else if (len == 20u) {
       std::memcpy(&service_id, &pkt[0], sizeof(uint16_t));
       service_primitive_id = pkt[3];
 
       if (service_id == 0x0105u && service_primitive_id == 0x12u) {
-        SetNmState(REPEAT_MESSAGE);
+        ethnm->SetNmState(REPEAT_MESSAGE);
       } else if (service_id == 0x0105u && service_primitive_id == 0x51u) {
-        SetNmState(SLEEP_BUS);
+        ethnm->SetNmState(SLEEP_BUS);
       }
     }
   }
-  return 0;
 }
 
 void Ethnm::Open() { connection_manager_->SetUdpSocket(); }
@@ -73,14 +57,10 @@ void Ethnm::Open() { connection_manager_->SetUdpSocket(); }
 void Ethnm::Start() {
   Open();
   StartThread();
+  connection_manager_->StartUdpReceiveThread();
 }
 
 void Ethnm::StartThread() {
-  if (pthread_create(this->tid_network_, nullptr, EthNmThread, (void *)this) <
-      0) {
-    ErrorBreak("thread create");
-  }
-
   if (pthread_create(tid_statemanager_, nullptr, StateManagerThread,
                      (void *)this) < 0) {
     ErrorBreak("thread create");
@@ -89,7 +69,7 @@ void Ethnm::StartThread() {
 
 void Ethnm::SendNmMsg() { connection_manager_->SendMulticast(); }
 
-void Ethnm::RecieveNmMSg() { connection_manager_->RecieveMulticast(); }
+// void Ethnm::RecieveNmMSg() { connection_manager_->RecieveMulticast(); }
 
 void Ethnm::NmStateNotify() {
   if (pre_state_var_ != GetNmState()) {
@@ -116,9 +96,9 @@ void Ethnm::NmStateNotify() {
   }
 }
 int Ethnm::GetNmState() {
-  pthread_rwlock_rdlock(&this->rwlock_);
+  // pthread_rwlock_rdlock(&this->rwlock_);
   return state_var_;
-  pthread_rwlock_unlock(&this->rwlock_);
+  // pthread_rwlock_unlock(&this->rwlock_);
 }
 void Ethnm::SetNmState(int state) {
   pthread_rwlock_wrlock(&this->rwlock_);
@@ -177,25 +157,24 @@ void Ethnm::ErrorBreak(const char *s) {
 }
 
 void Ethnm::StopThread() {
-  if ((!this->tid_network_) || (!this->tid_statemanager_)) return;
+  if (!this->tid_statemanager_) return;
 
-  pthread_cancel(*this->tid_network_);
+  // pthread_cancel(*this->tid_network_);
   pthread_cancel(*this->tid_statemanager_);
 
   /* Wait until the thread is cancelled successfully */
-  pthread_join(*this->tid_network_, NULL);
+  // pthread_join(*this->tid_network_, NULL);
   pthread_join(*this->tid_statemanager_, NULL);
 
-  free(this->tid_network_);
+  // free(this->tid_network_);
   free(this->tid_statemanager_);
 
-  this->tid_network_ = NULL;
+  // this->tid_network_ = NULL;
   this->tid_statemanager_ = NULL;
 }
 void Ethnm::Stop() {
   this->StopThread();
 
-  connection_manager_->Stop();
-  delete connection_manager_;
+  this->Close();
   delete this;
 }

@@ -30,7 +30,10 @@ ConnectionManager::ConnectionManager(TcpServer *server) {
 }
 
 // 2024-03-25 ispark: ConnectionManager add
-ConnectionManager::ConnectionManager(Ethnm *ethnm) { this->ethnm = ethnm; }
+ConnectionManager::ConnectionManager(Ethnm *ethnm) {
+  this->ethnm = ethnm;
+  this->udp_packet_receive_ = (pthread_t *)calloc(1, sizeof(pthread_t));
+}
 
 ConnectionManager::~ConnectionManager() {}
 
@@ -164,37 +167,51 @@ void ConnectionManager::SetUdpSocket() {
   }
 }
 
+void ConnectionManager::RegisterUdpPacket(UdpPacketReceived receive,
+                                          void *context) {
+  this->udp_received = receive;
+  this->ethnm_context = context;
+}
+
 void ConnectionManager::RecieveMulticast() {
   NmPacket rcvpkt;
+  int state_mask = (REPEAT_MESSAGE | NORMAL_OPERATION | READY_SLEEP);
   // sleep check
   static uint32_t T_WaitBusSleep = 0;  // count
   static bool nm_msg_check = false;
   memset(&rcvpkt, 0, sizeof(rcvpkt));
 
-  while (1) {
-    // std::cout << "[received data]\n" << std::endl;
-    std::memset(&rcvpkt, 0, sizeof(rcvpkt));
-    rcvpkt.data_len = recvfrom(reciever_sock_udp, rcvpkt.data, BUFSIZE, 0, NULL,
-                               0);  // 브로드캐스트 된 데이터를 수신
-    if (rcvpkt.data_len < 0) {
-      ErrorBreak("multicast receive");
-    } else {
-      rcvpkt.data[rcvpkt.data_len] = '\0';
-      // sleep check
-      if ((rcvpkt.data_len == 8u && rcvpkt.data[0] != 0x7F) &&
-          (nm_msg_check == false)) {
-        T_WaitBusSleep++;
-        // sleep count: 5s
-        if (T_WaitBusSleep > WAIT_SLEEP_TIME) {
-          this->ethnm->SetNmState(READY_SLEEP);  // send msg stop
-          T_WaitBusSleep = 0;
-          nm_msg_check = true;
-        }
+  while (true) {
+    if ((ethnm->GetNmState() & state_mask)) {
+      //  std::cout << "[received data]\n" << std::endl;
+      std::memset(&rcvpkt, 0, sizeof(rcvpkt));
+      rcvpkt.data_len =
+          recvfrom(reciever_sock_udp, rcvpkt.data, BUFSIZE, 0, NULL,
+                   0);  // 브로드캐스트 된 데이터를 수신
+      if (rcvpkt.data_len < 0) {
+        ErrorBreak("multicast receive");
       } else {
-        nm_msg_check = false;
-        T_WaitBusSleep = 0;
+        rcvpkt.data[rcvpkt.data_len] = '\0';
+        // sleep check
+        if ((rcvpkt.data_len == 8u && rcvpkt.data[0] != 0x7F) &&
+            (nm_msg_check == false)) {
+          T_WaitBusSleep++;
+          // sleep count: 5s
+          if (T_WaitBusSleep > WAIT_SLEEP_TIME) {
+            this->ethnm->SetNmState(READY_SLEEP);  // send msg stop
+            T_WaitBusSleep = 0;
+            nm_msg_check = true;
+          }
+        } else {
+          nm_msg_check = false;
+          T_WaitBusSleep = 0;
+        }
+        // this->ethnm->Parser((uint8_t *)rcvpkt.data, rcvpkt.data_len);
+        if (this->udp_received) {
+          this->udp_received((uint8_t *)rcvpkt.data, rcvpkt.data_len,
+                             this->ethnm);
+        }
       }
-      this->ethnm->Parser((uint8_t *)rcvpkt.data, rcvpkt.data_len);
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
@@ -215,9 +232,38 @@ void ConnectionManager::SendMulticast() {
                  sizeof(send_addr)) < 0) {
         this->ErrorBreak("send multicast msg");
       }
+      ethnm->NmStateNotify();
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
   }
+}
+
+static void *UdpPacketReceive(void *arg) {
+  ConnectionManager *cm = (ConnectionManager *)arg;
+
+  cm->RecieveMulticast();
+  return 0;
+}
+
+void ConnectionManager::StartUdpReceiveThread() {
+  /* Start a thread_ */
+  if (pthread_create(this->udp_packet_receive_, nullptr, UdpPacketReceive,
+                     (void *)this)) {
+    ErrorBreak("StartUdpReceiveThread thread create failed");
+  }
+}
+
+void ConnectionManager::StopUdpReceiveThread() {
+  if (!this->udp_packet_receive_) return;
+
+  printf("pthread_cancel\n");
+  pthread_cancel(*this->udp_packet_receive_);
+
+  /* Wait until the thread_ is cancelled successfully */
+  pthread_join(*this->udp_packet_receive_, NULL);
+
+  free(this->udp_packet_receive_);
+  this->udp_packet_receive_ = NULL;
 }
 
 static void *ConnectionManagerThread(void *arg) {
@@ -259,8 +305,13 @@ void ConnectionManager::Stop() {
 
   // /* 3. Delete this instance of connmgr */
   // delete this;
+
+  this->StopUdpReceiveThread();
+
   close(reciever_sock_udp);
   close(sender_sock_udp);
+
+  delete this;
 }
 
 void ConnectionManager::ErrorBreak(const char *s) {

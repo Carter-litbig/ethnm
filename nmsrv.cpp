@@ -7,7 +7,7 @@ Ethnm* ethnm_ptr;
 void handle_signal(int _signal) {
   if (ethnm_ptr != nullptr && (_signal == SIGINT || _signal == SIGTERM)) {
     std::cout << "handle_signal exit!\n" << std::endl;
-    ethnm_ptr->End();
+    ethnm_ptr->Stop();
   }
 }
 
@@ -23,11 +23,7 @@ int main(int argc, char** argv) {
     i++;
   }
 
-  // Ethnm* ethnm = new Ethnm(nm_state, INIT_STATE);
-
-  // uint32_t nm_state = 0;
-  // TcpServer* srv1 = new TcpServer("127.0.0.1", 40000, "tcp server1");
-  // printf("state : %d\n", nm_state);
+  // ./nmsrv state value(0,2,4,8,16,32,64)
   Ethnm* ethnm = new Ethnm(nm_state, INIT_STATE);
   ethnm_ptr = ethnm;
 
@@ -37,6 +33,7 @@ int main(int argc, char** argv) {
   ethnm->Init();
   ethnm->Start();
 
+  scanf("\n");
   std::cout << "EthNM core exit!\n" << std::endl;
   return 0;
 }

@@ -2,23 +2,20 @@
 
 #include "nm_util.h"
 
-using enum {
-  INIT_STATE,
-  WAKE_UP,
-  PREPARE_SLEEP,
-  REPEAT_MESSAGE,
-  NORMAL_OPERATION,
-  READY_SLEEP,
-  SLEEP_BUS,
-  ERROR_STATE
-} nm_state_e;
+enum {
+  INIT_STATE = (0x01 << 0),
+  WAKE_UP = (0x01 << 1),
+  PREPARE_SLEEP = (0x01 << 2),
+  REPEAT_MESSAGE = (0x01 << 3),
+  NORMAL_OPERATION = (0x01 << 4),
+  READY_SLEEP = (0x01 << 5),
+  SLEEP_BUS = (0x01 << 6)
+};
 
 class ConnectionManager;
 
 class Ethnm {
  public:
-  int state_var;
-  bool send_msg_running;
   Ethnm(int s, int ps);
   ~Ethnm();
   void Init();
@@ -26,22 +23,25 @@ class Ethnm {
   void Start();
   void Close();
   void End();
-  void SetNmState();
+  int GetNmState();
+  void SetNmState(int state);
+  void NmStateNotify();
   void StartThread();
   void SendNmMsg();
   void RecieveNmMSg();
   void Sleep();
   void StopThread();
   void Stop();
-  void Notify();
+  void SleepNotify();
   void ErrorBreak(const char* s);
   int Parser(uint8_t* p, uint32_t len);
 
  private:
   // 2024-03-26 ispark: connection_manager_ add.
-  ConnectionManager* connection_manager_;
+  int state_var_;
   int pre_state_var_;
-  nm_state_e nm_state_;
+  ConnectionManager* connection_manager_;
   pthread_t* tid_network_;
   pthread_t* tid_statemanager_;
+  pthread_rwlock_t rwlock_;
 };

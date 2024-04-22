@@ -30,9 +30,7 @@ ConnectionManager::ConnectionManager(TcpServer *server) {
 }
 
 // 2024-03-25 ispark: ConnectionManager add
-ConnectionManager::ConnectionManager(Ethnm *ethnm) {
-  this->ethnm = ethnm;
-}
+ConnectionManager::ConnectionManager(Ethnm *ethnm) { this->ethnm = ethnm; }
 
 ConnectionManager::~ConnectionManager() {}
 
@@ -160,14 +158,14 @@ void ConnectionManager::SetUdpSocket() {
   mreq.imr_multiaddr.s_addr = inet_addr(MULTICAST_ADDR);
   mreq.imr_interface.s_addr = htonl(INADDR_ANY);
 
-  if (setsockopt(reciever_sock_udp, IPPROTO_IP, IP_ADD_MEMBERSHIP, (void *)&mreq,
-                 sizeof(mreq)) < 0) {
+  if (setsockopt(reciever_sock_udp, IPPROTO_IP, IP_ADD_MEMBERSHIP,
+                 (void *)&mreq, sizeof(mreq)) < 0) {
     this->ErrorBreak("join muticast group");
   }
 }
 
 void ConnectionManager::RecieveMulticast() {
-  Packet rcvpkt;
+  NmPacket rcvpkt;
   // sleep check
   static uint32_t T_WaitBusSleep = 0;  // count
   static bool nm_msg_check = false;
@@ -188,8 +186,7 @@ void ConnectionManager::RecieveMulticast() {
         T_WaitBusSleep++;
         // sleep count: 5s
         if (T_WaitBusSleep > WAIT_SLEEP_TIME) {
-          this->ethnm->state_var = READY_SLEEP;  // send msg stop
-          this->ethnm->send_msg_running = false;
+          this->ethnm->SetNmState(READY_SLEEP);  // send msg stop
           T_WaitBusSleep = 0;
           nm_msg_check = true;
         }
@@ -206,13 +203,14 @@ void ConnectionManager::RecieveMulticast() {
 void ConnectionManager::SendMulticast() {
   uint8_t msg[] = {0x7E, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
   struct sockaddr_in send_addr;
+  int state_mask = (REPEAT_MESSAGE | NORMAL_OPERATION);
   memset(&send_addr, 0, sizeof(send_addr));
   send_addr.sin_family = AF_INET;
   send_addr.sin_addr.s_addr = inet_addr(MULTICAST_ADDR);
   send_addr.sin_port = htons(MULTICAST_PORT);
 
-  while (this->ethnm->send_msg_running) {
-    if (ethnm->state_var == REPEAT_MESSAGE || ethnm->state_var == NORMAL_OPERATION) {
+  while (true) {
+    if ((ethnm->GetNmState() & state_mask)) {
       if (sendto(sender_sock_udp, msg, sizeof(msg), 0, (sockaddr *)&send_addr,
                  sizeof(send_addr)) < 0) {
         this->ErrorBreak("send multicast msg");

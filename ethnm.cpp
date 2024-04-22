@@ -9,23 +9,18 @@
 #include "connection_manager.h"
 
 // 생성자
-Ethnm::Ethnm(int s, int ps)
-    : state_var(s),
-      pre_state_var_(ps),
-      nm_state_(INIT_STATE),
-      send_msg_running(true) {
-      connection_manager_ = new ConnectionManager(this);
+Ethnm::Ethnm(int s, int ps) : state_var_(s), pre_state_var_(ps) {
+  connection_manager_ = new ConnectionManager(this);
+  pthread_rwlock_init(&this->rwlock_, NULL);
 
   this->tid_network_ = (pthread_t *)calloc(1, sizeof(pthread_t));
   this->tid_statemanager_ = (pthread_t *)calloc(1, sizeof(pthread_t));
 }
 
 // 소멸자
-Ethnm::~Ethnm() { Stop(); }
+Ethnm::~Ethnm() {}
 
 void Ethnm::Init() {
-  nm_state_e nm_stat;
-
   // this->Start();
 }
 
@@ -34,9 +29,9 @@ void Ethnm::Init() {
 **************************************************************/
 static void *EthNmThread(void *arg) {
   Ethnm *ethnm = (Ethnm *)arg;
+  int state_mask = (REPEAT_MESSAGE || NORMAL_OPERATION || READY_SLEEP);
   while (true) {
-    if (ethnm->state_var == REPEAT_MESSAGE || ethnm->state_var == NORMAL_OPERATION ||
-        ethnm->state_var == READY_SLEEP) {
+    if ((ethnm->GetNmState() & state_mask)) {
       ethnm->RecieveNmMSg();
     } else {
       // exit(0);
@@ -47,7 +42,7 @@ static void *EthNmThread(void *arg) {
 static void *StateManagerThread(void *arg) {
   Ethnm *ethnm = (Ethnm *)arg;
   while (true) {
-    ethnm->SetNmState();
+    ethnm->NmStateNotify();
     ethnm->SendNmMsg();
   }
 }
@@ -58,15 +53,15 @@ int Ethnm::Parser(uint8_t *pkt, uint32_t len) {
 
   if (len > 0) {
     if (len == 8u && pkt[0] == 0x7F) {
-      state_var = REPEAT_MESSAGE;
+      SetNmState(REPEAT_MESSAGE);
     } else if (len == 20u) {
       std::memcpy(&service_id, &pkt[0], sizeof(uint16_t));
       service_primitive_id = pkt[3];
 
       if (service_id == 0x0105u && service_primitive_id == 0x12u) {
-        state_var = REPEAT_MESSAGE;
+        SetNmState(REPEAT_MESSAGE);
       } else if (service_id == 0x0105u && service_primitive_id == 0x51u) {
-        state_var = SLEEP_BUS;
+        SetNmState(SLEEP_BUS);
       }
     }
   }
@@ -90,50 +85,57 @@ void Ethnm::StartThread() {
                      (void *)this) < 0) {
     ErrorBreak("thread create");
   }
-
-  pthread_join(*this->tid_network_, NULL);
-  pthread_join(*this->tid_statemanager_, NULL);
 }
 
 void Ethnm::SendNmMsg() { connection_manager_->SendMulticast(); }
 
 void Ethnm::RecieveNmMSg() { connection_manager_->RecieveMulticast(); }
 
-void Ethnm::SetNmState() {
-  if (pre_state_var_ != state_var) {
-    pre_state_var_ = state_var;
+void Ethnm::NmStateNotify() {
+  if (pre_state_var_ != GetNmState()) {
+    pre_state_var_ = GetNmState();
 
-    if (state_var == WAKE_UP) {
+    if (GetNmState() == INIT_STATE) {
+      std::cout << "Init state\n" << std::endl;
+    } else if (GetNmState() == WAKE_UP) {
       std::cout << "Wake up done\n" << std::endl;
-    } else if (state_var == REPEAT_MESSAGE) {
+    } else if (GetNmState() == PREPARE_SLEEP) {
+      std::cout << "Prepare sleep\n" << std::endl;
+    } else if (GetNmState() == REPEAT_MESSAGE) {
       std::cout << "Go repeat message\n" << std::endl;
-      send_msg_running = true;
-    } else if (state_var == NORMAL_OPERATION) {
+    } else if (GetNmState() == NORMAL_OPERATION) {
       std::cout << "Go normal operation\n" << std::endl;
-    } else if (state_var == SLEEP_BUS) {
+    } else if (GetNmState() == SLEEP_BUS) {
       std::cout << "Go sleep\n" << std::endl;
-      send_msg_running = false;
-      Notify();
-
-    } else if (state_var == READY_SLEEP) {
+      SleepNotify();
+    } else if (GetNmState() == READY_SLEEP) {
       std::cout << "Go READY_SLEEP\n" << std::endl;
-      send_msg_running = false;
-    } else if (state_var == ERROR_STATE) {
+    } else {
       std::cout << "State Errror!\n" << std::endl;
     }
   }
+}
+int Ethnm::GetNmState() {
+  pthread_rwlock_rdlock(&this->rwlock_);
+  return state_var_;
+  pthread_rwlock_unlock(&this->rwlock_);
+}
+void Ethnm::SetNmState(int state) {
+  pthread_rwlock_wrlock(&this->rwlock_);
+  state_var_ = state;
+  pthread_rwlock_unlock(&this->rwlock_);
 }
 
 void Ethnm::Close() { connection_manager_->Stop(); }
 
 void Ethnm::End() {
-  state_var = INIT_STATE;
+  SetNmState(INIT_STATE);
   pre_state_var_ = INIT_STATE;
 }
 
 void Ethnm::Sleep() {}
 
-void Ethnm::Notify() {
+void Ethnm::SleepNotify() {
   const char *fifo_path = "/tmp/nmpipe";
   const char *message = "Sleep command!";
 

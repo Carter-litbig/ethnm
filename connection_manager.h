@@ -1,3 +1,5 @@
+#ifndef __CONNECTION_MANAGER__
+#define __CONNECTION_MANAGER__
 #include <pthread.h>
 
 #include "nm_util.h"
@@ -38,3 +40,4 @@ class ConnectionManager {
   pthread_t* thread_;
   void ErrorBreak(const char* s);
 };
+#endif /* __CONNECTION_MANAGER__ */

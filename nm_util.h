@@ -19,13 +19,12 @@
 #define WAIT_SLEEP_TIME 5
 #define WAIT_SLEEP_INTERVAL 10
 
-
-typedef struct Packet {
+struct NmPacket {
   unsigned char data[BUFSIZE];
   int data_len;
   uint32_t data_size;
   uint32_t data_seq;
   bool is_finish;
-} Packet_t;
+};
 
 #endif /* __NM_UTIL__ */
